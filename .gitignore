@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Notebooks
+.ipynb_checkpoints/
+
+# Local environments
+.venv/
+venv/
+env/
+
+# Kaggle and local outputs
+data/
+models/
+outputs/
+results/
+working/
+kaggle/working/
+
+# Deep learning artifacts
+*.pth
+*.pt
+*.ckpt
+*.onnx
+*.h5
+*.safetensors
+
+# Large dataset archives
+*.tar
+*.tar.gz
+*.zip
+*.7z
+
+# OS/editor
+.DS_Store
+.vscode/
+.idea/
