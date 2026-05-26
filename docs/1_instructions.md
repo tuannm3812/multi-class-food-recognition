@@ -1,19 +1,21 @@
-# 1. Assignment Instructions And Approach
+# 1. Project Instructions And Approach
 
 ## 1. Objective
 
 This project builds a 101-class food image classifier for the Food-101 dataset
-as part of 94691 Deep Learning Assignment 2 on convolutional neural networks.
+as a personal deep learning project.
 
 The primary objective is to compare transfer learning and fine-tuning
-strategies for fine-grained food recognition. The assignment notebook focuses
+strategies for fine-grained food recognition. The notebook focuses
 on:
 
 - dataset ingestion and exploratory data analysis;
 - image preprocessing, augmentation, and PyTorch dataloaders;
 - transfer learning with three pretrained CNN architectures;
 - fine-tuning experiments on the best transfer-learning candidate;
-- final inference that returns top-3 class predictions for individual images.
+- final evaluation with held-out test metrics, top-k accuracy, hard-class
+  confusion diagnostics, qualitative error examples, and model efficiency
+  reporting.
 
 ## 2. Dataset
 
@@ -68,8 +70,10 @@ The notebook uses a stratified split:
 | Validation | 10% |
 | Test | 10% |
 
-The primary metric is top-1 validation accuracy. Error analysis also uses
-per-class F1 scores to identify the easiest and hardest food categories.
+The primary training-selection metric is top-1 validation accuracy. Final
+evaluation reports validation and test top-1/top-5 accuracy, per-class F1
+scores, hard-class confusion behavior, qualitative error examples, and
+single-image inference latency.
 
 ## 5. Kaggle Execution Contract
 
@@ -91,5 +95,6 @@ The saved notebook output shows:
 - ResNet50 led the frozen transfer-learning comparison.
 - Fine-tuning ResNet50 `layer3` and `layer4` produced the best validation
   result.
-- The final inference helper loads the fine-tuned checkpoint and reports top-3
-  class probabilities for random Food-101 images.
+- The final evaluation layer loads the fine-tuned checkpoint and exports
+  predictions, metrics, per-class reports, confusion diagnostics, qualitative
+  error examples, and efficiency measurements.

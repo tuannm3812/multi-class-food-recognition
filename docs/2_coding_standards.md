@@ -3,8 +3,8 @@
 ## 1. Repository Scope
 
 This repository is notebook-first. Kaggle notebooks are the executable source
-of truth, while `docs/` captures assignment instructions, modeling results,
-and project decisions.
+of truth, while `docs/` captures project instructions, modeling results, and
+project decisions.
 
 Keep the root small:
 
@@ -23,9 +23,8 @@ Use numbered, stable notebook names that match the workflow:
 
 1. `1_food101_transfer_finetuning.ipynb`
 
-Do not split training and inference into separate notebooks unless the
-assignment workflow changes. The current notebook is intended to run end to end
-on Kaggle.
+Do not split training and inference into separate notebooks unless the project
+workflow changes. The current notebook is intended to run end to end on Kaggle.
 
 Use numbered documentation filenames so the reading order is obvious:
 
@@ -33,6 +32,7 @@ Use numbered documentation filenames so the reading order is obvious:
 2. `2_coding_standards.md`
 3. `3_notebook_food101_transfer_finetuning.md`
 4. `4_model_results.md`
+5. `5_next_steps.md`
 
 ## 3. Code Style
 
@@ -130,8 +130,8 @@ decorative plots that do not support a decision.
 
 ## 7. Documentation Style
 
-Documentation should be written for an assignment marker or teammate who wants
-the reasoning quickly:
+Documentation should be written for a future reviewer or teammate who wants the
+reasoning quickly:
 
 - use numbered sections;
 - lead with findings and implications;

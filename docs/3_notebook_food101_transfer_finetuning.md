@@ -5,24 +5,21 @@
 Notebook:
 [`../notebooks/1_food101_transfer_finetuning.ipynb`](../notebooks/1_food101_transfer_finetuning.ipynb)
 
-Source notebook copied from the assignment workspace:
-
-```text
-Assignment2-25739083.ipynb
-```
+This notebook is maintained as the Kaggle source of truth for the personal
+Food-101 project.
 
 ## 2. Purpose
 
-This notebook is the source of truth for the Food-101 assignment workflow. It
+This notebook is the source of truth for the Food-101 project workflow. It
 builds the dataset manifest, audits the image data, trains transfer-learning
-baselines, fine-tunes the selected winner, and demonstrates top-3 inference on
-random images.
+baselines, fine-tunes the selected winner, and evaluates the final checkpoint
+with metrics, diagnostics, qualitative errors, and efficiency reporting.
 
 ## 3. Sections
 
 | Section | Role |
 | --- | --- |
-| 1. Project Summary | assignment context, dataset challenge, and experiment stages |
+| 1. Project Summary | project context, dataset challenge, and experiment stages |
 | 2. Runtime, Imports, And Configuration | centralized imports, uppercase `CFG` constants, seed setup, and device selection |
 | 3. Data Ingestion And Audit | fixed Kaggle dataset path, manifest creation, class balance, and image-shape sampling |
 | 4. Preprocessing, Splits, And Dataloaders | transforms, stratified split, custom `FoodDataset`, and dataloaders |
@@ -30,7 +27,7 @@ random images.
 | 6. Training And Evaluation Utilities | shared training, validation, checkpointing, and plotting functions |
 | 7. Part A: Transfer Learning Comparison | frozen-backbone benchmark and per-class error analysis |
 | 8. Part B: ResNet50 Fine-Tuning | selective unfreezing experiments for `layer4` and `layer3 + layer4` |
-| 9. Final Model Evaluation And Inference | selected checkpoint loading and top-3 image prediction |
+| 9. Final Model Evaluation And Inference | selected checkpoint loading, test metrics, hard-class confusion, qualitative errors, and latency |
 
 ## 4. Configuration
 
@@ -63,14 +60,27 @@ Expected checkpoint names include:
 - `finetuned_exp_1_layer4.pth`
 - `finetuned_exp_2_layer3_4.pth`
 
+Evaluation artifacts include:
+
+- `history_*.csv`
+- `transfer_val_predictions.csv`
+- `transfer_val_metrics.csv`
+- `transfer_val_class_report.csv`
+- `val_predictions.csv`
+- `val_metrics.csv`
+- `val_class_report.csv`
+- `test_predictions.csv`
+- `test_metrics.csv`
+- `test_class_report.csv`
+- `final_model_efficiency.csv`
+- `qualitative_error_examples.csv`
+- `figures/test_hard_class_confusion.png`
+- `figures/qualitative_error_examples.png`
+
 These files are Kaggle outputs and should not be committed to git.
 
 ## 6. Current Limitations
 
-The current notebook is strong enough for the assignment workflow, but future
-iterations could improve:
-
-- test-set evaluation after final model selection;
-- confusion matrix and top-k accuracy reporting;
-- model size and inference latency comparison;
-- history export to CSV or JSON for easier documentation updates.
+The current notebook now has a stronger evaluation layer. Future iterations
+should focus on training improvements and architecture comparison in a second
+notebook so the baseline remains stable.

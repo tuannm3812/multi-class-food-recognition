@@ -3,12 +3,11 @@
 ![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=flat-square&logo=python&logoColor=white)
 ![PyTorch](https://img.shields.io/badge/Framework-PyTorch-EE4C2C?style=flat-square&logo=pytorch&logoColor=white)
 ![Kaggle](https://img.shields.io/badge/Runtime-Kaggle-20BEFF?style=flat-square&logo=kaggle&logoColor=white)
-![Status](https://img.shields.io/badge/Status-Assignment%20Workflow-2E7D32?style=flat-square)
+![Status](https://img.shields.io/badge/Status-Evaluation%20Ready-2E7D32?style=flat-square)
 
-Notebook-first Food-101 image classification project for 94691 Deep Learning
-Assignment 2. The workflow compares transfer learning across GoogLeNet,
-ResNet50, and MobileNetV3, then fine-tunes the strongest backbone for
-101-class food recognition.
+Notebook-first Food-101 image classification project. The workflow compares
+transfer learning across GoogLeNet, ResNet50, and MobileNetV3, then fine-tunes
+the strongest backbone for 101-class food recognition.
 
 ## 1. Project Overview
 
@@ -18,7 +17,7 @@ intra-class variance, strong visual similarity between some dishes, and noisy
 real-world photography conditions.
 
 This repository is intentionally small because training is run on Kaggle. The
-Kaggle notebook is the executable source of truth; docs capture the assignment
+Kaggle notebook is the executable source of truth; docs capture the project
 structure, experiment decisions, and current model results.
 
 Expected Kaggle dataset path used by the notebook:
@@ -48,7 +47,8 @@ Notebook outputs are written under:
 |   |-- 1_instructions.md
 |   |-- 2_coding_standards.md
 |   |-- 3_notebook_food101_transfer_finetuning.md
-|   `-- 4_model_results.md
+|   |-- 4_model_results.md
+|   `-- 5_next_steps.md
 `-- notebooks/
     `-- 1_food101_transfer_finetuning.ipynb
 ```
@@ -57,7 +57,7 @@ Notebook outputs are written under:
 
 | Notebook | Purpose |
 | --- | --- |
-| `1_food101_transfer_finetuning.ipynb` | Food-101 EDA, PyTorch dataloaders, transfer learning comparison, ResNet50 fine-tuning, and top-3 image inference. |
+| `1_food101_transfer_finetuning.ipynb` | Food-101 ingestion, PyTorch dataloaders, transfer learning comparison, ResNet50 fine-tuning, final evaluation, and qualitative error analysis. |
 
 ## 4. Modeling Approach
 
@@ -103,13 +103,15 @@ on Kaggle and attach the Food-101 dataset. The notebook handles:
 3. ImageNet normalization and augmentation.
 4. Transfer learning model construction.
 5. Training, validation, checkpointing, and error analysis.
-6. Fine-tuning comparison and final top-3 inference.
+6. Fine-tuning comparison, held-out test evaluation, top-k accuracy,
+   hard-class confusion analysis, qualitative errors, and efficiency reporting.
 
 No local dependency setup is required for this repository.
 
 ## 7. Documentation
 
-- [Assignment instructions and approach](docs/1_instructions.md)
+- [Project instructions and approach](docs/1_instructions.md)
 - [Coding standards](docs/2_coding_standards.md)
 - [Notebook notes](docs/3_notebook_food101_transfer_finetuning.md)
 - [Model results](docs/4_model_results.md)
+- [Next steps](docs/5_next_steps.md)
