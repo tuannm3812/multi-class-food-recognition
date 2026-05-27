@@ -16,6 +16,8 @@ on:
 - final evaluation with held-out test metrics, top-k accuracy, hard-class
   confusion diagnostics, qualitative error examples, and model efficiency
   reporting.
+- artifact-based inference reruns so evaluation can be repeated without
+  retraining all models.
 
 ## 2. Dataset
 
@@ -88,6 +90,14 @@ Generated checkpoints should not be committed to this repository. Kaggle is the
 trusted execution environment for rerunning the notebook and regenerating
 outputs.
 
+For faster inference-only reruns, upload the baseline checkpoints as a Kaggle
+dataset, attach that dataset to the notebook, and set:
+
+```python
+CFG.MODE = "inference"
+CFG.ARTIFACT_DIR = Path("/kaggle/input/food101-baseline-artifacts")
+```
+
 ## 6. Current Solution
 
 The saved notebook output shows:
@@ -98,3 +108,5 @@ The saved notebook output shows:
 - The final evaluation layer loads the fine-tuned checkpoint and exports
   predictions, metrics, per-class reports, confusion diagnostics, qualitative
   error examples, and efficiency measurements.
+- Follow-up notebooks now separate training-recipe improvements and modern
+  backbone comparisons from the baseline workflow.

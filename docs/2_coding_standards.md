@@ -21,10 +21,13 @@ committed.
 
 Use numbered, stable notebook names that match the workflow:
 
-1. `1_food101_transfer_finetuning.ipynb`
+1. `01_food101_baseline_transfer_finetuning.ipynb`
+2. `02_resnet50_training_refinements.ipynb`
+3. `03_modern_backbone_comparison.ipynb`
 
-Do not split training and inference into separate notebooks unless the project
-workflow changes. The current notebook is intended to run end to end on Kaggle.
+Notebook 1 is the stable baseline and evaluation workflow. Later notebooks
+should isolate experiment families, such as ResNet50 recipe changes or modern
+backbone comparisons, so results remain attributable.
 
 Use numbered documentation filenames so the reading order is obvious:
 

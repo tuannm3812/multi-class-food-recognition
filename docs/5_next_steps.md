@@ -6,8 +6,10 @@ The current workflow has a clear baseline and a credible champion:
 
 | Stage | Best result |
 | --- | ---: |
-| Frozen ResNet50 transfer learning | 58.85% validation accuracy |
-| Fine-tuned ResNet50 `layer3 + layer4` | 72.75% validation accuracy |
+| Frozen ResNet50 transfer learning | 59.49% validation top-1 |
+| Fine-tuned ResNet50 `layer3 + layer4` | 72.86% validation top-1 |
+| Fine-tuned ResNet50 `layer3 + layer4` | 73.64% test top-1 |
+| Fine-tuned ResNet50 `layer3 + layer4` | 91.18% test top-5 |
 
 This is a strong baseline for the personal Food-101 project. The current
 notebook should remain the baseline and evaluation notebook.
@@ -23,9 +25,10 @@ The baseline notebook now includes the evaluation layer:
    CSV.
 5. Qualitative error-analysis panel for the final model.
 6. Model size and single-image inference latency.
+7. Artifact-backed inference mode for faster reruns.
 
 These changes make the result easier to defend because they show whether the
-72.75% validation result transfers to unseen test images and which classes
+72.86% validation result transfers to unseen test images and which classes
 still need targeted attention.
 
 ## 3. Model Improvement Plan
@@ -61,9 +64,9 @@ After the evaluation layer is reliable, scale the project in three directions:
 
 The next implementation task should be:
 
-> Create `2_resnet50_training_refinements.ipynb` for longer ResNet50
-> fine-tuning with early stopping, learning-rate scheduling, stronger
-> augmentation, and optional label smoothing.
+> Run `02_resnet50_training_refinements.ipynb` using the uploaded baseline
+> checkpoint artifact, then compare its final validation/test metrics against
+> notebook 1.
 
 This keeps the baseline notebook stable and makes any improvement easier to
 attribute to the training recipe rather than evaluation changes.

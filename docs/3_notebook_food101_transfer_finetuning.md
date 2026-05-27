@@ -3,7 +3,7 @@
 ## 1. File
 
 Notebook:
-[`../notebooks/1_food101_transfer_finetuning.ipynb`](../notebooks/1_food101_transfer_finetuning.ipynb)
+[`../notebooks/01_food101_baseline_transfer_finetuning.ipynb`](../notebooks/01_food101_baseline_transfer_finetuning.ipynb)
 
 This notebook is maintained as the Kaggle source of truth for the personal
 Food-101 project.
@@ -29,6 +29,13 @@ with metrics, diagnostics, qualitative errors, and efficiency reporting.
 | 8. Part B: ResNet50 Fine-Tuning | selective unfreezing experiments for `layer4` and `layer3 + layer4` |
 | 9. Final Model Evaluation And Inference | selected checkpoint loading, test metrics, hard-class confusion, qualitative errors, and latency |
 
+Follow-up notebooks:
+
+| Notebook | Role |
+| --- | --- |
+| [`../notebooks/02_resnet50_training_refinements.ipynb`](../notebooks/02_resnet50_training_refinements.ipynb) | tests longer ResNet50 fine-tuning, early stopping, scheduling, stronger augmentation, and label smoothing |
+| [`../notebooks/03_modern_backbone_comparison.ipynb`](../notebooks/03_modern_backbone_comparison.ipynb) | compares EfficientNet-B0 and ConvNeXt-Tiny against the ResNet50 baseline |
+
 ## 4. Configuration
 
 Key configuration values from the notebook:
@@ -43,6 +50,7 @@ Key configuration values from the notebook:
 | Part A epochs | 5 |
 | Fine-tuning epochs | 5 |
 | Fine-tuning learning rate | 1e-5 |
+| Artifact directory | `/kaggle/input/food101-baseline-artifacts` |
 
 ## 5. Generated Outputs
 
@@ -72,6 +80,7 @@ Evaluation artifacts include:
 - `test_predictions.csv`
 - `test_metrics.csv`
 - `test_class_report.csv`
+- `test_confusion_pairs.csv`
 - `final_model_efficiency.csv`
 - `qualitative_error_examples.csv`
 - `figures/test_hard_class_confusion.png`

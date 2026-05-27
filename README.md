@@ -50,14 +50,18 @@ Notebook outputs are written under:
 |   |-- 4_model_results.md
 |   `-- 5_next_steps.md
 `-- notebooks/
-    `-- 1_food101_transfer_finetuning.ipynb
+    |-- 01_food101_baseline_transfer_finetuning.ipynb
+    |-- 02_resnet50_training_refinements.ipynb
+    `-- 03_modern_backbone_comparison.ipynb
 ```
 
 ## 3. Notebook Workflow
 
 | Notebook | Purpose |
 | --- | --- |
-| `1_food101_transfer_finetuning.ipynb` | Food-101 ingestion, PyTorch dataloaders, transfer learning comparison, ResNet50 fine-tuning, final evaluation, and qualitative error analysis. |
+| `01_food101_baseline_transfer_finetuning.ipynb` | Food-101 ingestion, PyTorch dataloaders, transfer learning comparison, ResNet50 fine-tuning, final evaluation, and qualitative error analysis. |
+| `02_resnet50_training_refinements.ipynb` | ResNet50 recipe improvements: longer fine-tuning, early stopping, LR scheduling, stronger augmentation, and label smoothing. |
+| `03_modern_backbone_comparison.ipynb` | EfficientNet-B0 and ConvNeXt-Tiny comparison against the ResNet50 baseline. |
 
 ## 4. Modeling Approach
 
@@ -75,17 +79,20 @@ Part B fine-tunes ResNet50 with two unfreezing strategies:
 | Experiment | Trainable scope | Best validation accuracy |
 | --- | --- | ---: |
 | Exp 1 | `layer4` + classifier head | 69.52% |
-| Exp 2 | `layer3`, `layer4` + classifier head | 72.75% |
+| Exp 2 | `layer3`, `layer4` + classifier head | 72.86% |
 
 The current champion is **ResNet50 fine-tuned on layer3 + layer4**, reaching
-**72.75% validation accuracy** in the saved notebook output.
+**72.86% validation top-1** and **73.64% held-out test top-1** in the latest
+Kaggle run.
 
 ## 5. Key Findings
 
 - Food-101 is balanced with 101 classes, but visual difficulty varies sharply.
 - Frozen ResNet50 was the strongest Part A backbone in the saved run.
-- Fine-tuning deeper ResNet50 blocks improved validation accuracy from the
-  frozen-feature baseline to above the 70% target.
+- Fine-tuning deeper ResNet50 blocks improved validation accuracy from
+  **59.49%** frozen ResNet50 top-1 to **72.86%** fine-tuned top-1.
+- Held-out test performance is slightly higher than validation performance:
+  **73.64% top-1** and **91.18% top-5**.
 - Hard classes include visually similar or ambiguous dishes such as `steak`,
   `chocolate_mousse`, `ravioli`, `pork_chop`, and `ceviche`.
 - Easier classes include distinctive dishes such as `edamame`, `seaweed_salad`,
@@ -95,7 +102,7 @@ Detailed results: [docs/4_model_results.md](docs/4_model_results.md).
 
 ## 6. Kaggle Usage
 
-Open [notebooks/1_food101_transfer_finetuning.ipynb](notebooks/1_food101_transfer_finetuning.ipynb)
+Open [notebooks/01_food101_baseline_transfer_finetuning.ipynb](notebooks/01_food101_baseline_transfer_finetuning.ipynb)
 on Kaggle and attach the Food-101 dataset. The notebook handles:
 
 1. Dataset manifest creation.
@@ -105,6 +112,10 @@ on Kaggle and attach the Food-101 dataset. The notebook handles:
 5. Training, validation, checkpointing, and error analysis.
 6. Fine-tuning comparison, held-out test evaluation, top-k accuracy,
    hard-class confusion analysis, qualitative errors, and efficiency reporting.
+
+For faster reruns, upload the `.pth` checkpoints from `/kaggle/working/results`
+as a Kaggle dataset and set `CFG.MODE = "inference"` with `CFG.ARTIFACT_DIR`
+pointing to that dataset.
 
 No local dependency setup is required for this repository.
 

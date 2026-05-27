@@ -5,13 +5,13 @@
 Part A freezes the pretrained convolutional features and trains only the
 custom 3-layer classifier heads.
 
-Saved notebook output:
+Latest Kaggle run:
 
 | Model | Best validation accuracy | Checkpoint |
 | --- | ---: | --- |
-| GoogLeNet | 40.66% | `best_model_googlenet.pth` |
-| ResNet50 | 58.85% | `best_model_resnet50.pth` |
-| MobileNetV3 Large | 53.43% | `best_model_mobilenetv3.pth` |
+| GoogLeNet | 42.03% | `best_model_googlenet.pth` |
+| ResNet50 | 59.49% | `best_model_resnet50.pth` |
+| MobileNetV3 Large | 54.60% | `best_model_mobilenetv3.pth` |
 
 ResNet50 is the strongest Part A model in the saved output and is selected for
 fine-tuning.
@@ -23,18 +23,25 @@ depths.
 
 | Experiment | Trainable backbone scope | Learning rate | Best validation accuracy |
 | --- | --- | ---: | ---: |
-| Exp 1 | `layer4` | 1e-5 | 69.52% |
-| Exp 2 | `layer3` + `layer4` | 1e-5 | 72.75% |
+| Exp 1 | `layer4` | 1e-5 | 69.23% |
+| Exp 2 | `layer3` + `layer4` | 1e-5 | 72.86% |
 
 The current champion is **Exp 2: ResNet50 with `layer3` and `layer4`
-fine-tuned**, reaching **72.75% validation accuracy**.
+fine-tuned**, reaching **72.86% validation top-1 accuracy**.
+
+Final evaluation:
+
+| Split | Top-1 accuracy | Top-5 accuracy |
+| --- | ---: | ---: |
+| Validation | 72.86% | 90.99% |
+| Test | 73.64% | 91.18% |
 
 ## 3. Error Analysis
 
 Per-class F1 scores show which categories are most visually separable and which
 remain difficult after fine-tuning.
 
-Top classes after final fine-tuning:
+Top classes after frozen ResNet50 transfer learning:
 
 | Class | F1 score |
 | --- | ---: |
@@ -49,20 +56,21 @@ Top classes after final fine-tuning:
 | `spaghetti_carbonara` | 0.873 |
 | `frozen_yogurt` | 0.872 |
 
-Hardest classes after final fine-tuning:
+Hardest classes after final fine-tuning on validation and test remain visually
+ambiguous. The latest test run highlights:
 
 | Class | F1 score |
 | --- | ---: |
-| `apple_pie` | 0.524 |
-| `filet_mignon` | 0.519 |
-| `scallops` | 0.515 |
-| `foie_gras` | 0.514 |
-| `tuna_tartare` | 0.508 |
-| `ceviche` | 0.507 |
-| `pork_chop` | 0.498 |
-| `ravioli` | 0.482 |
-| `chocolate_mousse` | 0.434 |
-| `steak` | 0.420 |
+| `ceviche` | 0.549 |
+| `tuna_tartare` | 0.549 |
+| `foie_gras` | 0.538 |
+| `scallops` | 0.537 |
+| `filet_mignon` | 0.521 |
+| `bread_pudding` | 0.521 |
+| `chocolate_mousse` | 0.498 |
+| `pork_chop` | 0.495 |
+| `ravioli` | 0.473 |
+| `steak` | 0.450 |
 
 ## 4. Interpretation
 
@@ -85,7 +93,7 @@ The saved run supports four practical conclusions:
    backbone provides a stronger starting representation for fine-grained food
    categories.
 2. **Domain adaptation is necessary.** Fine-tuning `layer3` and `layer4`
-   improved validation accuracy from 58.85% to 72.75%, a gain of 13.90
+   improved validation accuracy from 59.49% to 72.86%, a gain of 13.37
    percentage points over the frozen ResNet50 baseline.
 3. **The model handles distinctive dishes well.** Classes such as `edamame`,
    `seaweed_salad`, `bibimbap`, and `pho` likely benefit from distinctive
@@ -95,6 +103,13 @@ The saved run supports four practical conclusions:
    often overlap with nearby categories in texture, color, and composition.
    These errors should be inspected with confusion matrices and image examples
    before assuming that a larger model is the right fix.
+5. **Top-5 accuracy changes the product story.** The model reaches 91.18%
+   test top-5 accuracy, which is valuable for food-recognition interfaces that
+   can show ranked suggestions rather than a single hard prediction.
+6. **Confidence calibration needs attention.** High-confidence errors such as
+   `sashimi -> sushi`, `ramen -> pho`, `gyoza -> dumplings`, and
+   `frozen_yogurt -> ice_cream` are semantically reasonable, but near-100%
+   confidence on wrong classes suggests future calibration work.
 
 ## 6. Notebook Refinements Added
 
@@ -106,6 +121,15 @@ The notebook has been refined with stronger evaluation coverage:
 - CSV exports for histories, predictions, metrics, and per-class reports.
 - Qualitative high-confidence error examples.
 - Model-size and single-image inference-latency reporting.
+- Top confusion-pair export to identify repeated substitutions.
+
+Latest efficiency result:
+
+| Metric | Value |
+| --- | ---: |
+| Parameters | 24,714,405 |
+| Model size | 94.48 MB |
+| T4 latency | 5.82 ms/image |
 
 ## 7. Model Improvement Direction
 
@@ -113,11 +137,12 @@ The current champion is a strong personal-project baseline because it exceeds
 70% validation accuracy. The next model improvement should be measured, not
 speculative:
 
-1. Rerun the refined notebook and confirm held-out test performance.
-2. Then, create a second controlled ResNet50 refinement notebook with longer
+1. Use notebook 1 as the fixed baseline and artifact-backed evaluation
+   workflow.
+2. Run the second controlled ResNet50 refinement notebook with longer
    fine-tuning,
    learning-rate scheduling, and early stopping.
-3. Only after that, compare a stronger modern backbone such as EfficientNet-B0
+3. After that, compare a stronger modern backbone such as EfficientNet-B0
    or ConvNeXt-Tiny against ResNet50 under the same split and reporting
    protocol.
 
