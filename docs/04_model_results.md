@@ -214,3 +214,62 @@ The architecture comparison confirms that the strongest improvement so far
 came from the ResNet50 training recipe, not from switching backbones. The next
 technical step should focus on error-driven refinement and calibration before
 adding more architectures.
+
+## 10. Calibration And Inference Results
+
+Notebook 4 evaluated the current champion, `resnet50_ft_v2_best.pth`, with
+temperature scaling and deterministic single-image inference.
+
+Calibration improved without changing the model's top-k ranking:
+
+| Split | Temperature | ECE before | ECE after | Change |
+| --- | ---: | ---: | ---: | ---: |
+| Validation | 0.958 | 0.0419 | 0.0251 | -0.0168 |
+| Test | 0.958 | 0.0432 | 0.0265 | -0.0167 |
+
+The calibrated model keeps the same held-out test accuracy:
+
+| Metric | Value |
+| --- | ---: |
+| Test top-1 accuracy | 78.28% |
+| Test top-5 accuracy | 92.65% |
+
+The main value of Notebook 4 is not higher accuracy. It makes the model more
+usable by improving confidence quality and exporting product-oriented
+diagnostics.
+
+Hardest test classes after calibrated evaluation:
+
+| Class | F1 score |
+| --- | ---: |
+| `chocolate_mousse` | 0.529 |
+| `steak` | 0.560 |
+| `pork_chop` | 0.589 |
+| `bread_pudding` | 0.611 |
+| `tuna_tartare` | 0.617 |
+| `foie_gras` | 0.625 |
+| `scallops` | 0.644 |
+| `apple_pie` | 0.645 |
+| `crab_cakes` | 0.650 |
+| `ravioli` | 0.652 |
+
+Top repeated confusion pairs still reflect visually similar food families:
+
+- `tuna_tartare -> beef_tartare`
+- `steak -> filet_mignon`
+- `bread_pudding -> apple_pie`
+- `filet_mignon -> steak`
+- `chocolate_cake -> chocolate_mousse`
+- `gyoza -> dumplings`
+- `donuts -> beignets`
+
+Single-image inference is now available through a deterministic helper. The
+sample Kaggle image `miso_soup/1014272.jpg` was correctly predicted as
+`miso_soup` with 0.992 calibrated confidence.
+
+Interpretation:
+
+- Temperature scaling should be kept for product-facing confidence values.
+- Accuracy is already stable; the main remaining risk is class ambiguity.
+- Next work should convert calibrated confidence into decision thresholds such
+  as auto-accept, show top-k suggestions, or ask for user confirmation.

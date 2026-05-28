@@ -12,6 +12,7 @@ The core reasoning is:
 2. Improve the strongest baseline with **controlled fine-tuning**.
 3. Test whether a **modern backbone** justifies replacing the refined champion.
 4. Use **error analysis and calibration** to make the champion easier to trust.
+5. Convert calibrated predictions into **product decision bands**.
 
 ## 2. Why Notebook-First
 
@@ -160,7 +161,37 @@ Decision expected:
 Notebook 4 moves the project from model comparison toward **trust, usability,
 and deployment readiness**.
 
-## 7. Cross-Notebook Evaluation Contract
+## 7. Notebook 5: Define Product Decision Bands
+
+Notebook:
+[`../notebooks/05_confidence_decision_layer.ipynb`](../notebooks/05_confidence_decision_layer.ipynb)
+
+Question:
+
+> How should the product act on each calibrated prediction?
+
+Logic flow:
+
+1. Load calibrated prediction outputs from Notebook 4.
+2. Engineer decision features such as top-1 confidence, top-1/top-2 margin,
+   hard-class flags, and frequent confusion-pair flags.
+3. Search interpretable thresholds for auto-accept, suggest, confirm, and
+   review bands.
+4. Report coverage and accuracy for each decision band.
+5. Export a decision policy and representative examples.
+
+Decision expected:
+
+| Band | Meaning |
+| --- | --- |
+| Auto-accept | prediction is confident enough to accept directly |
+| Suggest | top-k ranking should be shown to the user |
+| Confirm | user confirmation is needed before accepting |
+| Review | known hard/confusing pattern should be inspected carefully |
+
+Notebook 5 turns calibrated model output into **product behavior**.
+
+## 8. Cross-Notebook Evaluation Contract
 
 All notebooks should preserve the same **comparison contract**:
 
@@ -173,18 +204,20 @@ All notebooks should preserve the same **comparison contract**:
 | Artifacts | checkpoints, histories, predictions, class reports |
 | Documentation | markdown conclusions tied to the executed result |
 | Calibration | confidence quality for the champion model |
+| Decision layer | action bands, coverage, and accuracy by band |
 
 This keeps model changes interpretable. A new experiment should explain **what
 changed**, **why it changed**, and whether the result is strong enough to alter
 the project direction.
 
-## 8. Current Reasoning Conclusion
+## 9. Current Reasoning Conclusion
 
-The current champion is **ResNet50 FT-V2**. The project should now move from
-general model search to **targeted improvement**:
+The current champion is **ResNet50 FT-V2**. The project has moved from general
+model search to **targeted improvement and decision design**:
 
 1. **Calibrate confidence scores**.
 2. Study repeated **hard-class confusion pairs**.
 3. Improve **deterministic single-image inference**.
-4. Revisit compact models only if **deployment constraints** become more
+4. Define **product decision bands** from calibrated predictions.
+5. Revisit compact models only if **deployment constraints** become more
    important than accuracy.

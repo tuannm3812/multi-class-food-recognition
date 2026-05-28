@@ -5,7 +5,7 @@
 ![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=flat-square&logo=python&logoColor=white)
 ![PyTorch](https://img.shields.io/badge/Framework-PyTorch-EE4C2C?style=flat-square&logo=pytorch&logoColor=white)
 ![Computer Vision](https://img.shields.io/badge/Domain-Computer%20Vision-455A64?style=flat-square)
-![Status](https://img.shields.io/badge/Status-Model%20Evaluation-2E7D32?style=flat-square)
+![Status](https://img.shields.io/badge/Status-Champion%20Model-2E7D32?style=flat-square)
 
 **Notebook-first Food-101 image classification** project focused on building a
 reliable baseline, improving it with controlled experiments, and translating
@@ -123,11 +123,13 @@ much smaller, but its accuracy was not competitive for the current target.
 | `02_resnet50_training_refinements.ipynb` | Improves the selected ResNet50 checkpoint with longer fine-tuning, AdamW, LR scheduling, stronger augmentation, and label smoothing. |
 | `03_modern_backbone_comparison.ipynb` | Compares EfficientNet-B0 and ConvNeXt-Tiny against ResNet50 FT-V2 using the same split, metrics, and artifact exports. |
 | `04_resnet50_error_calibration_inference.ipynb` | Analyzes the champion with calibration metrics, hard-class reports, high-confidence errors, and deterministic single-image inference. |
+| `05_confidence_decision_layer.ipynb` | Converts calibrated predictions into product actions: auto-accept, show suggestions, request confirmation, or review. |
 
-Detailed approach, result notes, and next steps are maintained in
-[docs/3_modeling_approach.md](docs/3_modeling_approach.md),
-[docs/4_model_results.md](docs/4_model_results.md), and
-[docs/5_next_steps.md](docs/5_next_steps.md).
+Detailed approach, result notes, and next steps are indexed in
+[docs/README.md](docs/README.md) and maintained in
+[docs/03_modeling_approach.md](docs/03_modeling_approach.md),
+[docs/04_model_results.md](docs/04_model_results.md), and
+[docs/05_next_steps.md](docs/05_next_steps.md).
 
 Banner image source:
 [`meatdistrictco.com.au`](https://www.meatdistrictco.com.au/wp-content/uploads/2024/08/0O2A0384-1700x660.jpg)

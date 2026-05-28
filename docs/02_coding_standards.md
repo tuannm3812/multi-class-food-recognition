@@ -2,14 +2,14 @@
 
 ## 1. Repository Scope
 
-This repository is notebook-first. Kaggle notebooks are the executable source
-of truth, while `docs/` captures project instructions, modeling results, and
-project decisions.
+This repository uses a notebook-led experiment workflow. Kaggle notebooks are
+the executable source of truth, while `docs/` captures project instructions,
+modeling results, and project decisions.
 
 Keep the root small:
 
 - `notebooks/` for Kaggle notebooks.
-- `docs/` for standards, instructions, notebook notes, and result summaries.
+- `docs/` for standards, instructions, modeling approach, and result summaries.
 - `README.md` for the high-level project overview.
 
 Avoid adding local-only folders such as `data/`, `models/`, `outputs/`,
@@ -24,18 +24,21 @@ Use numbered, stable notebook names that match the workflow:
 1. `01_food101_baseline_transfer_finetuning.ipynb`
 2. `02_resnet50_training_refinements.ipynb`
 3. `03_modern_backbone_comparison.ipynb`
+4. `04_resnet50_error_calibration_inference.ipynb`
+5. `05_confidence_decision_layer.ipynb`
 
 Notebook 1 is the stable baseline and evaluation workflow. Later notebooks
-should isolate experiment families, such as ResNet50 recipe changes or modern
-backbone comparisons, so results remain attributable.
+should isolate experiment families, such as ResNet50 recipe changes, modern
+backbone comparisons, calibration analysis, or product decision layers, so
+results remain attributable.
 
 Use numbered documentation filenames so the reading order is obvious:
 
-1. `1_instructions.md`
-2. `2_coding_standards.md`
-3. `3_modeling_approach.md`
-4. `4_model_results.md`
-5. `5_next_steps.md`
+1. `01_project_instructions.md`
+2. `02_coding_standards.md`
+3. `03_modeling_approach.md`
+4. `04_model_results.md`
+5. `05_next_steps.md`
 
 ## 3. Code Style
 
