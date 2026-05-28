@@ -33,7 +33,7 @@ Use numbered documentation filenames so the reading order is obvious:
 
 1. `1_instructions.md`
 2. `2_coding_standards.md`
-3. `3_notebook_food101_transfer_finetuning.md`
+3. `3_modeling_approach.md`
 4. `4_model_results.md`
 5. `5_next_steps.md`
 

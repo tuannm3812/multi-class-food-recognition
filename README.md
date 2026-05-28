@@ -4,25 +4,23 @@
 
 ![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=flat-square&logo=python&logoColor=white)
 ![PyTorch](https://img.shields.io/badge/Framework-PyTorch-EE4C2C?style=flat-square&logo=pytorch&logoColor=white)
-![Kaggle](https://img.shields.io/badge/Runtime-Kaggle-20BEFF?style=flat-square&logo=kaggle&logoColor=white)
-![Status](https://img.shields.io/badge/Status-ResNet50%20Champion-2E7D32?style=flat-square)
+![Computer Vision](https://img.shields.io/badge/Domain-Computer%20Vision-455A64?style=flat-square)
+![Status](https://img.shields.io/badge/Status-Model%20Evaluation-2E7D32?style=flat-square)
 
-This is a notebook-first Food-101 image classification project. The project
-builds a reliable baseline, improves the selected model with a stronger
-training recipe, and checks whether modern compact backbones can replace the
-current champion.
+**Notebook-first Food-101 image classification** project focused on building a
+reliable baseline, improving it with controlled experiments, and translating
+model performance into practical food-recognition implications.
 
 ## 1. Project Overview
 
-Food recognition is a fine-grained computer vision problem: many classes share
-similar ingredients, colors, textures, and plating styles. This project uses
-the Food-101 dataset to classify food images into **101 categories**.
+Food recognition is a **fine-grained computer vision** problem. Many dishes
+share similar colors, ingredients, textures, and plating styles, so the model
+needs to be evaluated beyond a single accuracy score.
 
-The repository is intentionally lightweight. Training runs on Kaggle, while the
-repo keeps the notebooks, experiment notes, coding standards, and result
-summary versioned in one place.
-
-Dataset summary:
+This project classifies Food-101 images into **101 food categories**. The work
+is structured around **reproducible notebooks** because the project is
+exploratory: each notebook records the reasoning, code, metrics, errors, and
+model artifacts for one experiment stage.
 
 | Item | Value |
 | --- | ---: |
@@ -31,26 +29,28 @@ Dataset summary:
 | Classes | 101 |
 | Images per class | 1,000 |
 | Split strategy | Stratified train / validation / test |
-| Runtime | Kaggle GPU |
+| Framework | PyTorch |
 
 ## 2. Task And Goal
 
-The task is **multi-class image classification**: given a food image, predict
-the correct Food-101 class.
+The task is **multi-class food image classification**: given one food image,
+predict the correct class from **101 possible labels**.
 
-The project goal is not only to maximize accuracy. The model also needs to be
-measured in a way that is useful for a practical food-recognition product:
+The goal is to build a **defensible model** that can support practical
+food-recognition workflows. That means the project tracks:
 
-1. Report held-out test performance, not validation accuracy only.
-2. Track both top-1 and top-5 accuracy.
-3. Inspect hard classes and repeated confusion pairs.
-4. Compare model size, parameter count, and inference latency.
-5. Keep experiments reproducible through Kaggle artifacts and clear notebook
-   configuration.
+1. **Held-out test accuracy**, not validation accuracy only.
+2. **Top-1 and top-5 accuracy** for both strict prediction and ranked suggestions.
+3. **Model size, parameter count, and inference latency**.
+4. **Hard classes, repeated confusion pairs, and qualitative failure examples**.
+5. Whether a new experiment changes the decision, not only whether it adds
+   complexity.
 
 ## 3. Key Metrics
 
-The current champion is **ResNet50 FT-V2**.
+The current champion is **ResNet50 FT-V2**, a refined ResNet50 model trained
+with longer fine-tuning, AdamW, learning-rate scheduling, stronger
+augmentation, and label smoothing.
 
 | Metric | Champion result |
 | --- | ---: |
@@ -62,7 +62,20 @@ The current champion is **ResNet50 FT-V2**.
 | Model size | 94.48 MB |
 | T4 latency | 5.35 ms/image |
 
-Model comparison from the latest Kaggle runs:
+## 4. Model Progress
+
+| Stage | Result |
+| --- | ---: |
+| Frozen ResNet50 transfer learning | 59.49% validation top-1 |
+| Baseline fine-tuned ResNet50 `layer3 + layer4` | 73.64% test top-1 |
+| Refined ResNet50 FT-V2 | 78.28% test top-1 |
+| Refined ResNet50 FT-V2 | 92.65% test top-5 |
+
+The largest gain came from improving the **ResNet50 training recipe**. The
+FT-V2 model improved held-out test top-1 by **4.63 percentage points** over the
+first fine-tuned ResNet50 baseline.
+
+## 5. Model Comparison
 
 | Model | Stage | Test top-1 | Test top-5 | Parameters | Model size | T4 latency |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
@@ -70,123 +83,51 @@ Model comparison from the latest Kaggle runs:
 | ConvNeXt-Tiny | frozen-head challenger | 70.92% | 90.24% | 28.4M | 108.23 MB | 7.17 ms/image |
 | EfficientNet-B0 | frozen-head challenger | 52.13% | 77.02% | 4.8M | 18.55 MB | 7.44 ms/image |
 
-## 4. Project Progress
+**ConvNeXt-Tiny** was the strongest modern-backbone challenger, but it was less
+accurate, larger, and slower than **ResNet50 FT-V2**. **EfficientNet-B0** was
+much smaller, but its accuracy was not competitive for the current target.
 
-The project has moved through three experiment stages.
+## 6. Technical Findings
 
-| Stage | Notebook | Outcome |
-| --- | --- | --- |
-| Baseline transfer learning | `01_food101_baseline_transfer_finetuning.ipynb` | ResNet50 was the strongest frozen-backbone baseline with 59.49% validation top-1. |
-| ResNet50 fine-tuning | `01_food101_baseline_transfer_finetuning.ipynb` | Fine-tuning `layer3 + layer4` reached 73.64% held-out test top-1. |
-| ResNet50 recipe refinement | `02_resnet50_training_refinements.ipynb` | FT-V2 improved held-out test top-1 to 78.28%. |
-| Modern backbone comparison | `03_modern_backbone_comparison.ipynb` | ConvNeXt-Tiny and EfficientNet-B0 did not beat ResNet50 FT-V2. |
+- **ResNet50** remains the strongest model family tested so far.
+- **Training-recipe refinement** delivered more value than switching to a modern
+  backbone.
+- **Top-5 accuracy above 92%** shows the model is much stronger as a ranked
+  suggestion engine than as a single hard-label system.
+- **Hard classes** cluster around visually similar foods: steak-like dishes,
+  tartare or ceviche dishes, pastry-like desserts, and chocolate desserts.
+- **High-confidence wrong predictions** show that calibration should be part
+  of the next evaluation layer.
 
-Progress summary:
+## 7. Business Implications
 
-- Fine-tuning improved ResNet50 substantially over frozen feature extraction.
-- The stronger FT-V2 recipe added **4.63 percentage points** over the first
-  fine-tuned ResNet50 test result.
-- ConvNeXt-Tiny was the best architecture challenger, but it was less accurate,
-  larger, and slower than ResNet50 FT-V2 in the current setup.
-- EfficientNet-B0 is compact, but its accuracy is not competitive yet.
-- The next meaningful step is error-driven refinement and confidence
-  calibration around the ResNet50 FT-V2 champion.
+- A food-recognition product should present **ranked suggestions** rather than
+  only one label, because top-5 performance is materially stronger than top-1.
+- The model is promising for **user-assisted tagging, menu enrichment, search**,
+  or food diary workflows where the user can confirm one of several likely
+  predictions.
+- The hardest classes are realistic **business edge cases**: visually similar
+  dishes may need user confirmation, richer metadata, or manual review.
+- **Confidence scores should not be exposed directly without calibration**,
+  because the model can be very confident on semantically plausible but wrong
+  classes.
+- **ResNet50 FT-V2 is the best current trade-off**: the tested modern
+  alternatives did not improve accuracy or efficiency enough to justify
+  replacing it.
 
-## 5. Notebook Workflow
+## 8. Experiment Workflow
 
 | Notebook | Purpose |
 | --- | --- |
-| `01_food101_baseline_transfer_finetuning.ipynb` | Builds the baseline: data ingestion, transfer-learning comparison, ResNet50 fine-tuning, held-out test evaluation, hard-class confusion analysis, qualitative errors, and efficiency reporting. |
+| `01_food101_baseline_transfer_finetuning.ipynb` | Builds the baseline with data ingestion, transfer-learning comparison, ResNet50 fine-tuning, held-out test evaluation, confusion analysis, qualitative errors, and efficiency reporting. |
 | `02_resnet50_training_refinements.ipynb` | Improves the selected ResNet50 checkpoint with longer fine-tuning, AdamW, LR scheduling, stronger augmentation, and label smoothing. |
 | `03_modern_backbone_comparison.ipynb` | Compares EfficientNet-B0 and ConvNeXt-Tiny against ResNet50 FT-V2 using the same split, metrics, and artifact exports. |
+| `04_resnet50_error_calibration_inference.ipynb` | Analyzes the champion with calibration metrics, hard-class reports, high-confidence errors, and deterministic single-image inference. |
 
-## 6. Repository Structure
-
-```text
-.
-|-- README.md
-|-- docs/
-|   |-- 1_instructions.md
-|   |-- 2_coding_standards.md
-|   |-- 3_notebook_food101_transfer_finetuning.md
-|   |-- 4_model_results.md
-|   `-- 5_next_steps.md
-`-- notebooks/
-    |-- 01_food101_baseline_transfer_finetuning.ipynb
-    |-- 02_resnet50_training_refinements.ipynb
-    `-- 03_modern_backbone_comparison.ipynb
-```
-
-## 7. Kaggle Usage
-
-Attach the Food-101 Kaggle dataset and run the notebooks in order.
-
-Expected dataset path:
-
-```text
-/kaggle/input/datasets/kmader/food41
-```
-
-Image directory:
-
-```text
-/kaggle/input/datasets/kmader/food41/images
-```
-
-Notebook outputs:
-
-```text
-/kaggle/working/results
-```
-
-Important model artifact paths:
-
-```text
-/kaggle/input/models/tuannm3823/food101-baseline-artifacts/pytorch/default/1/food101-baseline-artifacts
-/kaggle/input/models/tuannm3823/food101-resnet50-refinements/pytorch/default/1
-```
-
-For faster reruns, upload trained `.pth` files as Kaggle Model artifacts and
-switch notebook modes from training to inference or evaluation.
-
-No local dependency setup is required for this repository.
-
-## 8. Key Findings
-
-- ResNet50 remains the best model family tested so far.
-- The strongest gains came from a better training recipe, not from switching
-  architectures.
-- Top-5 accuracy above 92% means the model is useful for ranked food
-  suggestions even when top-1 prediction is uncertain.
-- Hard classes are concentrated in visually similar food families: steak-like
-  dishes, tartare or ceviche dishes, pastry-like desserts, and chocolate
-  desserts.
-- High-confidence wrong predictions suggest that calibration should be part of
-  the next evaluation layer.
-
-Detailed results are available in
-[docs/4_model_results.md](docs/4_model_results.md).
-
-## 9. Next Steps
-
-The next project step should focus on the current champion rather than another
-broad architecture search:
-
-1. Add calibration metrics and temperature scaling for ResNet50 FT-V2.
-2. Create deeper error analysis for repeated hard-class confusion pairs.
-3. Build deterministic single-image inference for deployment-style testing.
-4. Revisit compact models only if deployment size becomes more important than
-   accuracy.
-
-See [docs/5_next_steps.md](docs/5_next_steps.md) for the full plan.
-
-## 10. Documentation
-
-- [Project instructions and approach](docs/1_instructions.md)
-- [Coding standards](docs/2_coding_standards.md)
-- [Notebook notes](docs/3_notebook_food101_transfer_finetuning.md)
-- [Model results](docs/4_model_results.md)
-- [Next steps](docs/5_next_steps.md)
+Detailed approach, result notes, and next steps are maintained in
+[docs/3_modeling_approach.md](docs/3_modeling_approach.md),
+[docs/4_model_results.md](docs/4_model_results.md), and
+[docs/5_next_steps.md](docs/5_next_steps.md).
 
 Banner image source:
 [`meatdistrictco.com.au`](https://www.meatdistrictco.com.au/wp-content/uploads/2024/08/0O2A0384-1700x660.jpg)

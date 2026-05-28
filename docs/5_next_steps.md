@@ -12,9 +12,10 @@ The current workflow has a clear baseline and a credible champion:
 | Refined ResNet50 FT-V2 | 78.28% test top-1 |
 | Refined ResNet50 FT-V2 | 92.65% test top-5 |
 
-Notebook 1 should remain the baseline and evaluation reference. Notebook 2 is
-now the current ResNet50 champion because it improves held-out test top-1 by
-4.63 percentage points without increasing model size or parameter count.
+Notebook 1 should remain the **baseline and evaluation reference**. Notebook 2
+is now the current **ResNet50 champion** because it improves held-out test
+top-1 by **4.63 percentage points** without increasing model size or parameter
+count.
 
 ## 2. Baseline Notebook Refinements
 
@@ -30,13 +31,13 @@ The baseline notebook now includes the evaluation layer:
 7. Artifact-backed inference mode for faster reruns.
 
 These changes make the result easier to defend because they show whether the
-72.86% validation result transfers to unseen test images and which classes
+**72.86% validation result** transfers to unseen test images and which classes
 still need targeted attention.
 
 ## 3. Model Improvement Plan
 
-Notebook 2 has validated that the training recipe matters. It keeps ResNet50
-fixed and improves the recipe:
+Notebook 2 has validated that the **training recipe matters**. It keeps
+ResNet50 fixed and improves the recipe:
 
 | Experiment | Change | Reason |
 | --- | --- | --- |
@@ -53,8 +54,9 @@ Recommended additions:
 
 ## 4. Architecture Comparison Outcome
 
-Notebook 3 has now tested EfficientNet-B0 and ConvNeXt-Tiny as frozen-head
-modern-backbone challengers. ResNet50 FT-V2 remains the champion:
+Notebook 3 has now tested **EfficientNet-B0** and **ConvNeXt-Tiny** as
+frozen-head modern-backbone challengers. **ResNet50 FT-V2 remains the
+champion**:
 
 - ConvNeXt-Tiny reached **70.92% test top-1** and **90.24% test top-5**, but it
   is larger, slower, and 7.36 percentage points below ResNet50 FT-V2.
@@ -77,18 +79,30 @@ Scale the project in three directions:
 
 ## 6. Recommended Next Task
 
-The next implementation task should be:
+The next implementation task is now:
 
-> Build the next notebook around ResNet50 FT-V2 error analysis and calibration
-> rather than another broad architecture search.
+> Run `04_resnet50_error_calibration_inference.ipynb` for ResNet50 FT-V2
+> calibration, hard-class analysis, and deterministic single-image inference.
 
 This keeps the current champion stable and focuses effort on the real failure
-modes seen across notebooks 1 and 2: visually similar classes and
-overconfident wrong predictions.
+modes seen across notebooks 1 and 2: **visually similar classes** and
+**overconfident wrong predictions**.
 
-A new architecture should be promoted only if it improves accuracy
-meaningfully, improves inference efficiency, or reduces the same hard-class
-confusion patterns.
+A new architecture should be promoted only if it improves **accuracy**
+meaningfully, improves **inference efficiency**, or reduces the same
+**hard-class confusion patterns**.
 
 Keep `resnet50_ft_v2_best.pth` as the current champion artifact and use its
 Kaggle Model path as the reference input for future comparison notebooks.
+
+Expected outputs from Notebook 4:
+
+- `calibration_summary.csv`
+- `test_calibration_bins_raw.csv`
+- `test_calibration_bins_calibrated.csv`
+- `test_predictions_calibrated.csv`
+- `test_metrics_calibrated.csv`
+- `test_class_report_calibrated.csv`
+- `hard_classes_calibrated.csv`
+- `top_confusion_pairs_calibrated.csv`
+- `high_confidence_errors_calibrated.csv`
