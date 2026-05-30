@@ -313,5 +313,13 @@ The next technical step is to export the project artifacts into app-ready files:
 4. Improve the React frontend using the Stitch and AI Studio design exports.
 5. Build the image-upload MVP before starting video.
 
+Notebook 6 now writes the JSON artifacts under:
+
+```text
+/kaggle/working/results/food_recognition_demo/
+```
+
+The `.pth` checkpoint still comes from the Kaggle model artifact.
+
 This keeps FoodLens grounded in the current model evidence while opening a
 clear path from research notebook to usable application.

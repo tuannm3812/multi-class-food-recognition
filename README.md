@@ -154,6 +154,10 @@ The first static frontend concept is available at
 for now and will connect to a real inference API after the model artifacts are
 placed outside git.
 
+Notebook 6 exports the lightweight JSON artifacts required by the FoodLens
+backend. The ResNet50 FT-V2 `.pth` checkpoint remains a separate Kaggle model
+artifact.
+
 Detailed approach, result notes, and next steps are indexed in
 [docs/README.md](docs/README.md) and maintained in
 [docs/03_modeling_approach.md](docs/03_modeling_approach.md),

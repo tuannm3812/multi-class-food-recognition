@@ -66,6 +66,13 @@ Real inference needs:
 Artifacts should stay out of git and be placed under `app/artifacts/` or a
 local model path when the backend is added.
 
+Source:
+
+- Download `resnet50_ft_v2_best.pth` from the ResNet50 FT-V2 Kaggle model
+  artifact.
+- Download the JSON files from Notebook 6 output under
+  `results/food_recognition_demo/`.
+
 Expected JSON shapes:
 
 ```json
