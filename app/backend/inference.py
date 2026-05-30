@@ -5,7 +5,17 @@ import json
 from pathlib import Path
 from typing import Any, Optional
 
-from .schemas import Decision, Prediction, PredictionResponse
+from .schemas import (
+    BoundingBox,
+    Decision,
+    DetectorRegion,
+    FoodLensRegionPrediction,
+    MultiFoodPrediction,
+    MultiFoodPredictionResponse,
+    Prediction,
+    PredictionResponse,
+    RegionArtifacts,
+)
 
 
 ARTIFACT_DIR = Path(__file__).resolve().parents[1] / "artifacts"
@@ -39,6 +49,49 @@ MOCK_VIDEO_PREDICTIONS: tuple[tuple[str, float], ...] = (
     ("ceviche", 0.0511),
     ("tuna_tartare", 0.0394),
     ("miso_soup", 0.0128),
+)
+
+MOCK_MULTI_FOOD_REGIONS: tuple[dict[str, Any], ...] = (
+    {
+        "source_id": "sample_05_prohibition_table",
+        "detection_index": 0,
+        "bbox": (410, 132, 662, 382, 960, 733),
+        "detector": ("bowl", "serving_container", 0.5368, 0.102),
+        "foodlens": ("ravioli", 0.972, "auto_accept"),
+        "top_k": (("ravioli", 0.972), ("gnocchi", 0.018), ("lasagna", 0.004)),
+    },
+    {
+        "source_id": "sample_03_food_market",
+        "detection_index": 1,
+        "bbox": (380, 520, 820, 930, 1366, 1503),
+        "detector": ("bowl", "serving_container", 0.3046, 0.088),
+        "foodlens": ("lasagna", 0.920, "auto_accept"),
+        "top_k": (("lasagna", 0.920), ("ravioli", 0.033), ("pizza", 0.018)),
+    },
+    {
+        "source_id": "sample_01_simplot_table",
+        "detection_index": 2,
+        "bbox": (455, 374, 701, 595, 960, 733),
+        "detector": ("bowl", "serving_container", 0.4445, 0.077),
+        "foodlens": ("ramen", 0.768, "suggest"),
+        "top_k": (("ramen", 0.768), ("pho", 0.034), ("miso_soup", 0.023)),
+    },
+    {
+        "source_id": "sample_03_food_market",
+        "detection_index": 3,
+        "bbox": (20, 950, 430, 1290, 1366, 1503),
+        "detector": ("bowl", "serving_container", 0.3983, 0.068),
+        "foodlens": ("french_fries", 0.752, "suggest"),
+        "top_k": (("french_fries", 0.752), ("fish_and_chips", 0.146), ("onion_rings", 0.026)),
+    },
+    {
+        "source_id": "sample_02_party_food",
+        "detection_index": 4,
+        "bbox": (43, 313, 1363, 1458, 1366, 1503),
+        "detector": ("cake", "direct_food", 0.5763, 0.736),
+        "foodlens": ("falafel", 0.241, "confirm"),
+        "top_k": (("falafel", 0.241), ("donuts", 0.195), ("garlic_bread", 0.112)),
+    },
 )
 
 _RUNTIME: Optional[dict[str, Any]] = None
@@ -253,6 +306,70 @@ def predict_mock(mode: str = "image") -> PredictionResponse:
         decision=build_decision(mode, predictions),
         artifact_status=artifact_status(),
     )
+
+
+def build_multi_food_mock() -> MultiFoodPredictionResponse:
+    """Return a deterministic Notebook 8-style multi-food response."""
+    predictions: list[MultiFoodPrediction] = []
+    for region in MOCK_MULTI_FOOD_REGIONS:
+        x1, y1, x2, y2, source_width, source_height = region["bbox"]
+        detector_label, proposal_role, detector_confidence, crop_area_ratio = region[
+            "detector"
+        ]
+        top_label, top_confidence, decision_band = region["foodlens"]
+        crop_name = f"{region['source_id']}_crop_{region['detection_index']:02d}.jpg"
+        predictions.append(
+            MultiFoodPrediction(
+                source_id=region["source_id"],
+                detection_index=region["detection_index"],
+                bbox=BoundingBox(
+                    x1=x1,
+                    y1=y1,
+                    x2=x2,
+                    y2=y2,
+                    source_width=source_width,
+                    source_height=source_height,
+                ),
+                detector=DetectorRegion(
+                    label=detector_label,
+                    proposal_role=proposal_role,
+                    confidence=detector_confidence,
+                    crop_area_ratio=crop_area_ratio,
+                ),
+                foodlens=FoodLensRegionPrediction(
+                    top_label=top_label,
+                    top_confidence=top_confidence,
+                    decision_band=decision_band,
+                    top_k_predictions=list(region["top_k"]),
+                ),
+                artifacts=RegionArtifacts(
+                    crop_path=f"crops/{crop_name}",
+                    crop_artifact_path=f"app://demo/crops/{crop_name}",
+                    figure_path=f"figures/{region['source_id']}_detections.jpg",
+                ),
+            )
+        )
+
+    return MultiFoodPredictionResponse(
+        model=MODEL_NAME,
+        temperature=read_temperature(),
+        top_k=5,
+        decision_thresholds={"auto_accept": 0.85, "suggest": 0.50},
+        crop_count=len(predictions),
+        predictions=predictions,
+        artifact_status=artifact_status(),
+    )
+
+
+def predict_multi_food_image_bytes(image_bytes: bytes) -> MultiFoodPredictionResponse:
+    """Return multi-food predictions for an uploaded image.
+
+    The current app backend exposes the Notebook 8 response contract using a
+    deterministic prototype response. Live detector inference can replace this
+    function without changing the frontend contract.
+    """
+    _ = image_bytes
+    return build_multi_food_mock()
 
 
 def predict_image_bytes(image_bytes: bytes) -> PredictionResponse:

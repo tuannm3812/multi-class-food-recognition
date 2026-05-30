@@ -417,9 +417,9 @@ function summarizeMultiFoodResult(appResult) {
     decision: accepted > 0 ? "suggest" : "confirm",
     title: accepted > 0 ? "Review regions" : "Confirm crops",
     action: `${predictions.length} crops analyzed. ${accepted} auto-accept, ${suggested} suggest, ${confirmed} confirm.`,
-    modelName: "ResNet50 FT-V2 · Multi-food",
+    modelName: `${appResult.model || "ResNet50 FT-V2"} · Multi-food`,
     temperature: appResult.temperature,
-    artifactStatus: "JSON ready",
+    artifactStatus: appResult.artifact_status || "JSON ready",
     predictions: strongestPrediction
       ? strongestPrediction.foodlens.top_k_predictions
       : [["no_detection", 0]],
@@ -496,6 +496,22 @@ async function predictWithBackend(file, type) {
   }
 
   return normalizeApiResult(await response.json());
+}
+
+async function predictMultiFoodWithBackend(file) {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await fetch(`${API_BASE_URL}/predict/multi-food/image`, {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!response.ok) {
+    throw new Error(`FoodLens multi-food API returned ${response.status}`);
+  }
+
+  return response.json();
 }
 
 function waitForEvent(element, eventName) {
@@ -655,12 +671,20 @@ async function handleFile(file, type) {
   decisionBadge.className = "decision-badge badge-neutral";
 
   try {
-    const apiResult =
-      type === "video" ? await predictVideoFrames(source) : await predictWithBackend(file, type);
-    renderPredictions(apiResult);
+    if (type === "image") {
+      const apiResult = await predictMultiFoodWithBackend(file);
+      renderMultiFoodResults(apiResult);
+    } else {
+      const apiResult = await predictVideoFrames(source);
+      renderPredictions(apiResult);
+    }
   } catch (error) {
     console.warn("Using mock predictions because backend is unavailable.", error);
-    renderPredictions(MOCK_RESULTS[type]);
+    if (type === "image") {
+      renderMultiFoodResults(MULTI_FOOD_SAMPLE);
+    } else {
+      renderPredictions(MOCK_RESULTS[type]);
+    }
   }
 }
 

@@ -16,7 +16,7 @@ It includes:
 
 - image upload preview;
 - video upload concept mode;
-- mocked top-k predictions;
+- single-image and multi-region result views;
 - calibrated-confidence style display;
 - the four decision bands: auto-accept, suggest, confirm, and review.
 
@@ -45,12 +45,18 @@ Endpoints:
 ```text
 GET /health
 POST /predict/image
+POST /predict/multi-food/image
 POST /predict/video
 ```
 
 The backend uses the project ResNet50 FT-V2 artifacts when they are present. If
 artifacts or runtime dependencies are missing, it falls back to deterministic
 mock predictions so the frontend still works.
+
+The multi-food endpoint follows the Notebook 8 response contract so the app can
+render detected regions, crop-level FoodLens predictions, decision bands, and
+artifact references. It currently returns a deterministic prototype response;
+live detector inference is the next backend integration step.
 
 ## Artifact Requirements
 
@@ -95,5 +101,5 @@ Expected JSON shapes:
 
 ## Next Build Step
 
-The next implementation step is exporting the Notebook 6 metadata artifacts
-into the JSON files above and placing the checkpoint under `app/artifacts/`.
+The next implementation step is replacing the deterministic multi-food response
+with live detector output from Notebook 7 and crop classification from Notebook 8.

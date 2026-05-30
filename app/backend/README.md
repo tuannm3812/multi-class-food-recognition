@@ -27,11 +27,15 @@ http://127.0.0.1:8000/health
 
 ```text
 POST /predict/image
+POST /predict/multi-food/image
 POST /predict/video
 ```
 
-Both endpoints currently return deterministic mock predictions that match the
-final response shape expected by the frontend.
+The single-image and video endpoints use real artifacts when available and
+fallback predictions when they are not. The multi-food endpoint returns the
+Notebook 8 app contract with detected regions, crop-level predictions, decision
+bands, and artifact references. It is currently deterministic while live
+detector inference is being productized.
 
 ## Real Inference Integration
 
@@ -46,3 +50,6 @@ Required artifacts:
 - decision policy
 - hard-class list
 - confusion-pair list
+
+The multi-food path will also need detector weights or a packaged detector
+runtime, plus the same crop-classifier artifacts listed above.

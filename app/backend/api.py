@@ -3,8 +3,12 @@
 from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
-from .inference import predict_image_bytes, predict_mock
-from .schemas import PredictionResponse
+from .inference import (
+    predict_image_bytes,
+    predict_mock,
+    predict_multi_food_image_bytes,
+)
+from .schemas import MultiFoodPredictionResponse, PredictionResponse
 
 
 app = FastAPI(
@@ -37,6 +41,20 @@ async def predict_image(file: UploadFile = File(...)) -> PredictionResponse:
     """
     image_bytes = await file.read()
     return predict_image_bytes(image_bytes)
+
+
+@app.post("/predict/multi-food/image", response_model=MultiFoodPredictionResponse)
+async def predict_multi_food_image(
+    file: UploadFile = File(...),
+) -> MultiFoodPredictionResponse:
+    """Predict multiple food regions from an uploaded image.
+
+    This endpoint returns the Notebook 8 app contract. The current
+    implementation is deterministic while live detector inference is being
+    productized.
+    """
+    image_bytes = await file.read()
+    return predict_multi_food_image_bytes(image_bytes)
 
 
 @app.post("/predict/video", response_model=PredictionResponse)
