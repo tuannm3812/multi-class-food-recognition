@@ -72,6 +72,8 @@ Source:
   artifact.
 - Download the JSON files from Notebook 6 output under
   `results/food_recognition_demo/`.
+- For convenience, Notebook 6 also creates
+  `foodlens_app_artifacts.zip` with the JSON files and demo CSVs.
 
 Expected JSON shapes:
 

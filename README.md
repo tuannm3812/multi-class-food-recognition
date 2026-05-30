@@ -156,7 +156,8 @@ placed outside git.
 
 Notebook 6 exports the lightweight JSON artifacts required by the FoodLens
 backend. The ResNet50 FT-V2 `.pth` checkpoint remains a separate Kaggle model
-artifact.
+artifact. Notebook 6 also bundles the app JSON files and demo CSVs into
+`foodlens_app_artifacts.zip` for one-step download.
 
 Detailed approach, result notes, and next steps are indexed in
 [docs/README.md](docs/README.md) and maintained in

@@ -319,6 +319,12 @@ Notebook 6 now writes the JSON artifacts under:
 /kaggle/working/results/food_recognition_demo/
 ```
 
+It also creates one download bundle:
+
+```text
+/kaggle/working/results/food_recognition_demo/foodlens_app_artifacts.zip
+```
+
 The `.pth` checkpoint still comes from the Kaggle model artifact.
 
 This keeps FoodLens grounded in the current model evidence while opening a
