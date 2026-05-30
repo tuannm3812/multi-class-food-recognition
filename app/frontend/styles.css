@@ -489,6 +489,123 @@ a {
   box-shadow: 0 12px 30px rgba(31, 21, 20, 0.035);
 }
 
+.multi-food-panel {
+  margin-top: 18px;
+  padding: 16px;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  background: var(--panel);
+  box-shadow: 0 12px 30px rgba(31, 21, 20, 0.035);
+}
+
+.panel-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: end;
+  margin-bottom: 14px;
+}
+
+.panel-heading span {
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.panel-heading h2 {
+  margin: 3px 0 0;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  letter-spacing: -0.03em;
+}
+
+.panel-heading > strong {
+  color: var(--slate);
+  font-size: 0.85rem;
+}
+
+.multi-food-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.multi-food-card {
+  display: grid;
+  grid-template-columns: 92px 1fr;
+  min-height: 132px;
+  overflow: hidden;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  background: white;
+}
+
+.crop-thumb {
+  display: grid;
+  align-content: space-between;
+  padding: 10px;
+  background:
+    linear-gradient(135deg, rgba(201, 0, 22, 0.08), rgba(47, 111, 50, 0.08)),
+    #fbf8f7;
+}
+
+.crop-thumb span {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.crop-thumb strong {
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 0.86rem;
+  line-height: 1.1;
+  text-transform: capitalize;
+}
+
+.crop-body {
+  min-width: 0;
+  padding: 11px;
+}
+
+.crop-topline {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+}
+
+.crop-topline .decision-badge {
+  min-height: 23px;
+  padding: 0 8px;
+  font-size: 0.63rem;
+}
+
+.crop-topline > strong {
+  color: var(--slate);
+  font-size: 0.86rem;
+}
+
+.crop-body h3 {
+  margin: 10px 0 4px;
+  font-size: 0.95rem;
+  text-transform: capitalize;
+}
+
+.crop-body p,
+.crop-body small {
+  display: block;
+  color: var(--muted);
+  font-size: 0.75rem;
+  line-height: 1.35;
+}
+
+.crop-body small {
+  margin-top: 8px;
+}
+
 .secondary-view {
   margin-top: 22px;
   padding: 20px;
@@ -703,7 +820,8 @@ a {
 @media (max-width: 980px) {
   .site-header,
   .analysis-layout,
-  .decision-strip {
+  .decision-strip,
+  .multi-food-grid {
     grid-template-columns: 1fr;
   }
 
@@ -762,5 +880,9 @@ a {
 
   .decision-tile:last-child {
     border-bottom: 0;
+  }
+
+  .multi-food-card {
+    grid-template-columns: 82px 1fr;
   }
 }

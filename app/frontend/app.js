@@ -29,6 +29,74 @@ const MOCK_RESULTS = {
   },
 };
 
+const MULTI_FOOD_SAMPLE = {
+  model: "resnet50_ft_v2",
+  temperature: 0.9581114053726196,
+  crop_count: 23,
+  predictions: [
+    {
+      source_id: "sample_05_prohibition_table",
+      detector: { proposal_role: "serving_container", label: "bowl", confidence: 0.5368 },
+      foodlens: {
+        top_label: "ravioli",
+        top_confidence: 0.972,
+        decision_band: "auto_accept",
+        top_k_predictions: [["ravioli", 0.972], ["gnocchi", 0.018], ["lasagna", 0.004]],
+      },
+    },
+    {
+      source_id: "sample_03_food_market",
+      detector: { proposal_role: "serving_container", label: "bowl", confidence: 0.3046 },
+      foodlens: {
+        top_label: "lasagna",
+        top_confidence: 0.92,
+        decision_band: "auto_accept",
+        top_k_predictions: [["lasagna", 0.92], ["ravioli", 0.033], ["pizza", 0.018]],
+      },
+    },
+    {
+      source_id: "sample_01_simplot_table",
+      detector: { proposal_role: "serving_container", label: "bowl", confidence: 0.4445 },
+      foodlens: {
+        top_label: "ramen",
+        top_confidence: 0.768,
+        decision_band: "suggest",
+        top_k_predictions: [["ramen", 0.768], ["pho", 0.034], ["miso_soup", 0.023]],
+      },
+    },
+    {
+      source_id: "sample_03_food_market",
+      detector: { proposal_role: "serving_container", label: "bowl", confidence: 0.3983 },
+      foodlens: {
+        top_label: "french_fries",
+        top_confidence: 0.752,
+        decision_band: "suggest",
+        top_k_predictions: [["french_fries", 0.752], ["fish_and_chips", 0.146], ["onion_rings", 0.026]],
+      },
+    },
+    {
+      source_id: "sample_02_party_food",
+      detector: { proposal_role: "direct_food", label: "cake", confidence: 0.5763 },
+      foodlens: {
+        top_label: "falafel",
+        top_confidence: 0.241,
+        decision_band: "confirm",
+        top_k_predictions: [["falafel", 0.241], ["donuts", 0.195], ["garlic_bread", 0.112]],
+      },
+    },
+    {
+      source_id: "sample_04_orchard_table",
+      detector: { proposal_role: "serving_container", label: "bowl", confidence: 0.3118 },
+      foodlens: {
+        top_label: "pork_chop",
+        top_confidence: 0.144,
+        decision_band: "confirm",
+        top_k_predictions: [["pork_chop", 0.144], ["steak", 0.128], ["prime_rib", 0.097]],
+      },
+    },
+  ],
+};
+
 const DECISION_LABELS = {
   auto_accept: "Auto-accept",
   suggest: "Suggest",
@@ -64,6 +132,9 @@ const confidenceValue = document.querySelector("#confidenceValue");
 const confidenceFill = document.querySelector("#confidenceFill");
 const actionCopy = document.querySelector("#actionCopy");
 const predictionList = document.querySelector("#predictionList");
+const multiFoodPanel = document.querySelector("#multiFoodPanel");
+const multiFoodGrid = document.querySelector("#multiFoodGrid");
+const multiFoodCount = document.querySelector("#multiFoodCount");
 const modelName = document.querySelector("#modelName");
 const temperatureValue = document.querySelector("#temperatureValue");
 const artifactStatus = document.querySelector("#artifactStatus");
@@ -327,6 +398,75 @@ function renderPredictions(result) {
   });
 }
 
+function summarizeMultiFoodResult(appResult) {
+  const predictions = appResult.predictions || [];
+  const accepted = predictions.filter(
+    (prediction) => prediction.foodlens.decision_band === "auto_accept",
+  ).length;
+  const suggested = predictions.filter(
+    (prediction) => prediction.foodlens.decision_band === "suggest",
+  ).length;
+  const confirmed = predictions.filter(
+    (prediction) => prediction.foodlens.decision_band === "confirm",
+  ).length;
+  const strongestPrediction = predictions
+    .slice()
+    .sort((a, b) => b.foodlens.top_confidence - a.foodlens.top_confidence)[0];
+
+  return {
+    decision: accepted > 0 ? "suggest" : "confirm",
+    title: accepted > 0 ? "Review regions" : "Confirm crops",
+    action: `${predictions.length} crops analyzed. ${accepted} auto-accept, ${suggested} suggest, ${confirmed} confirm.`,
+    modelName: "ResNet50 FT-V2 · Multi-food",
+    temperature: appResult.temperature,
+    artifactStatus: "JSON ready",
+    predictions: strongestPrediction
+      ? strongestPrediction.foodlens.top_k_predictions
+      : [["no_detection", 0]],
+  };
+}
+
+function renderMultiFoodResults(appResult) {
+  const predictions = (appResult.predictions || [])
+    .slice()
+    .sort((a, b) => b.foodlens.top_confidence - a.foodlens.top_confidence);
+
+  multiFoodPanel.classList.toggle("hidden", predictions.length === 0);
+  multiFoodCount.textContent = `${predictions.length} crops`;
+  multiFoodGrid.innerHTML = predictions
+    .map((prediction, index) => {
+      const decision = prediction.foodlens.decision_band;
+      const label = formatLabel(prediction.foodlens.top_label);
+      const confidence = formatConfidence(prediction.foodlens.top_confidence);
+      const detectorLabel = formatLabel(prediction.detector.label);
+      const topAlternatives = prediction.foodlens.top_k_predictions
+        .slice(1, 3)
+        .map(([className, score]) => `${formatLabel(className)} ${formatConfidence(score)}`)
+        .join(" · ");
+
+      return `
+        <article class="multi-food-card">
+          <div class="crop-thumb">
+            <span>${String(index + 1).padStart(2, "0")}</span>
+            <strong>${label}</strong>
+          </div>
+          <div class="crop-body">
+            <div class="crop-topline">
+              <span class="decision-badge ${BADGE_CLASSES[decision]}">${DECISION_LABELS[decision]}</span>
+              <strong>${confidence}</strong>
+            </div>
+            <h3>${label}</h3>
+            <p>${prediction.source_id.replaceAll("_", " ")} · detector ${detectorLabel}</p>
+            <small>${topAlternatives || "No alternatives"}</small>
+          </div>
+        </article>
+      `;
+    })
+    .join("");
+
+  renderPredictions(summarizeMultiFoodResult(appResult));
+}
+
 function normalizeApiResult(apiResult) {
   return {
     decision: apiResult.decision.band,
@@ -480,6 +620,9 @@ function resetResult() {
   actionCopy.textContent =
     "FoodLens will show calibrated top-k predictions after an input is selected.";
   predictionList.innerHTML = "";
+  multiFoodPanel.classList.add("hidden");
+  multiFoodGrid.innerHTML = "";
+  multiFoodCount.textContent = "0 crops";
   decisionTiles.forEach((tile) => tile.classList.remove("active"));
 }
 
@@ -563,7 +706,7 @@ sampleButton.addEventListener("click", () => {
     setMode("image");
   }
   setPreview("image", SAMPLE_IMAGE);
-  renderPredictions(MOCK_RESULTS.image);
+  renderMultiFoodResults(MULTI_FOOD_SAMPLE);
 });
 
 clearButton.addEventListener("click", () => {
