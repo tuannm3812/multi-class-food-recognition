@@ -11,6 +11,7 @@ steps. The root `README.md` stays focused on the high-level project story.
 | [`04_model_results.md`](04_model_results.md) | baseline, refinement, backbone, calibration, and inference results |
 | [`05_next_steps.md`](05_next_steps.md) | recommended next work, demo validation, and decision-layer plan |
 | [`06_foodlens_app_concept.md`](06_foodlens_app_concept.md) | FoodLens product concept, MVP scope, app architecture, and roadmap |
+| [`07_multi_food_detection_plan.md`](07_multi_food_detection_plan.md) | detector-plus-classifier plan for multi-food image and video recognition |
 
 Current notebook sequence:
 
@@ -20,3 +21,5 @@ Current notebook sequence:
 4. `04_resnet50_error_calibration_inference.ipynb`
 5. `05_confidence_decision_layer.ipynb`
 6. `06_food_recognition_demo_inference.ipynb`
+7. `07_multi_food_detection_exploration.ipynb`
+8. `08_detection_to_foodlens_pipeline.ipynb`

@@ -4,115 +4,135 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>FoodLens</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./styles.css">
   </head>
   <body>
-    <main class="app-shell">
-      <header class="topbar">
-        <div class="brand">
-          <span class="brand-mark" aria-hidden="true"></span>
-          <div>
-            <h1>FoodLens</h1>
-            <p>Assisted food recognition</p>
-          </div>
-        </div>
-        <div class="status-strip" aria-label="Model status">
-          <span>ResNet50 FT-V2</span>
-          <span>Calibrated</span>
-          <span>Decision layer</span>
-        </div>
-      </header>
+    <header class="site-header">
+      <a class="brand" href="#" aria-label="FoodLens home">FoodLens</a>
+      <nav class="top-nav" aria-label="Primary navigation">
+        <a class="active" href="#" data-view="analysis">Analysis</a>
+        <a href="#" data-view="archive">Archive</a>
+        <a href="#" data-view="database">Database</a>
+        <a href="#" data-view="settings">Settings</a>
+      </nav>
+      <div class="header-actions" aria-label="User controls">
+        <button type="button" id="notificationButton" aria-label="Notifications">⌑</button>
+        <button type="button" id="profileButton" aria-label="Profile">◎</button>
+      </div>
+    </header>
 
-      <section class="workspace" aria-label="FoodLens prediction workspace">
-        <div class="input-panel">
+    <main class="page-shell">
+      <section class="page-title" aria-label="Analysis title">
+        <h1>Analysis Result</h1>
+        <p id="scanMeta">FoodLens · ResNet50 FT-V2 · Calibrated</p>
+      </section>
+
+      <section class="analysis-layout" aria-label="FoodLens analysis workspace">
+        <div class="image-column">
+          <div class="image-stage">
+            <img id="imagePreview" alt="Selected food preview">
+            <video id="videoPreview" controls muted playsinline></video>
+            <div class="preview-empty" id="previewEmpty">
+              <span class="empty-icon">⌁</span>
+              <strong>No Subject Detected</strong>
+              <span id="previewHelp">Upload a food image to begin analysis.</span>
+            </div>
+          </div>
+
+          <div class="input-actions" aria-label="Input actions">
+            <button class="action-button" type="button" id="cameraButton">Camera</button>
+            <div class="upload-zone" id="imageZone">
+              <input id="imageInput" type="file" accept="image/jpeg,image/png,image/webp,image/heic">
+              <label for="imageInput">Upload</label>
+            </div>
+            <div class="upload-zone hidden" id="videoZone">
+              <input id="videoInput" type="file" accept="video/mp4,video/quicktime,video/webm">
+              <label for="videoInput">Upload video</label>
+            </div>
+            <button class="action-button" type="button" id="clearButton">Clear</button>
+            <button class="action-button" type="button" id="sampleButton">Sample</button>
+          </div>
+          <p class="file-hint" id="fileHint">Images: JPG, PNG, WebP, HEIC. One clear dish works best.</p>
+
           <div class="mode-tabs" role="tablist" aria-label="Input mode">
             <button class="mode-tab active" type="button" data-mode="image">Image</button>
             <button class="mode-tab" type="button" data-mode="video">Video</button>
           </div>
-
-          <div class="upload-zone" id="imageZone">
-            <input id="imageInput" type="file" accept="image/*">
-            <label for="imageInput">
-              <span class="upload-title">Select food image</span>
-              <span class="upload-meta">JPG, PNG, or camera capture</span>
-            </label>
-          </div>
-
-          <div class="upload-zone hidden" id="videoZone">
-            <input id="videoInput" type="file" accept="video/*">
-            <label for="videoInput">
-              <span class="upload-title">Select short food video</span>
-              <span class="upload-meta">Frame sampling prototype</span>
-            </label>
-          </div>
-
-          <div class="preview-frame">
-            <img id="imagePreview" alt="Selected food preview">
-            <video id="videoPreview" controls muted playsinline></video>
-            <div class="preview-empty" id="previewEmpty">
-              <strong>Food image preview</strong>
-              <span>Use sample or upload your own</span>
-            </div>
-          </div>
-
-          <div class="input-actions">
-            <button class="primary-action" type="button" id="sampleButton">Use sample</button>
-            <button class="secondary-action" type="button" id="clearButton">Clear</button>
-          </div>
         </div>
 
-        <div class="result-panel">
-          <div class="result-header">
-            <div>
-              <span class="eyebrow">Decision</span>
-              <h2 id="decisionTitle">Ready</h2>
-            </div>
+        <aside class="result-card" aria-label="Prediction result">
+          <div class="result-topline">
             <span class="decision-badge badge-neutral" id="decisionBadge">Waiting</span>
+            <span class="confidence-score" id="confidenceValue">0.00%</span>
           </div>
 
-          <div class="prediction-hero">
-            <span class="label-caption">Top prediction</span>
-            <strong id="topPrediction">No image selected</strong>
-            <div class="confidence-row">
-              <span id="confidenceValue">0.00%</span>
-              <div class="confidence-track" aria-hidden="true">
-                <span id="confidenceFill"></span>
-              </div>
+          <h2 id="topPrediction">No image selected</h2>
+          <p id="actionCopy">FoodLens will return top-k predictions after upload.</p>
+
+          <div class="confidence-block">
+            <div class="confidence-track" aria-hidden="true">
+              <span id="confidenceFill"></span>
             </div>
-          </div>
-
-          <div class="action-copy" id="actionCopy">
-            FoodLens will show calibrated top-k predictions after an input is selected.
+            <div class="confidence-scale">
+              <span>Inconclusive</span>
+              <span>Strong match</span>
+            </div>
           </div>
 
           <div class="ranked-list" aria-label="Ranked predictions">
             <div class="ranked-heading">
-              <span>Ranked suggestions</span>
-              <span>Confidence</span>
+              <span>Candidate ranking</span>
+              <span>Score</span>
             </div>
             <div id="predictionList"></div>
           </div>
 
-          <div class="decision-grid" aria-label="Decision policy">
-            <div class="decision-tile active" data-band="auto_accept">
-              <span>Auto-accept</span>
-              <strong>96.47%</strong>
+          <button class="confirm-button" type="button" id="decisionTitle">Ready</button>
+
+          <div class="model-meta">
+            <div>
+              <span>Model</span>
+              <strong id="modelName">ResNet50 FT-V2</strong>
             </div>
-            <div class="decision-tile" data-band="suggest">
-              <span>Suggest</span>
-              <strong>Top-5</strong>
+            <div>
+              <span>Temp</span>
+              <strong id="temperatureValue">0.958111</strong>
             </div>
-            <div class="decision-tile" data-band="confirm">
-              <span>Confirm</span>
-              <strong>User check</strong>
-            </div>
-            <div class="decision-tile" data-band="review">
-              <span>Review</span>
-              <strong>Risk case</strong>
+            <div>
+              <span>Artifacts</span>
+              <strong id="artifactStatus">Ready</strong>
             </div>
           </div>
+        </aside>
+      </section>
+
+      <section class="decision-strip" aria-label="Decision policy">
+        <div class="decision-tile active" data-band="auto_accept">
+          <span class="dot auto"></span>
+          <span>Auto-accept</span>
+          <strong>Confidence &gt; 95%</strong>
+        </div>
+        <div class="decision-tile" data-band="suggest">
+          <span class="dot suggest"></span>
+          <span>Suggest</span>
+          <strong>Top-k selection</strong>
+        </div>
+        <div class="decision-tile" data-band="confirm">
+          <span class="dot confirm"></span>
+          <span>Confirm</span>
+          <strong>User verification</strong>
+        </div>
+        <div class="decision-tile" data-band="review">
+          <span class="dot review"></span>
+          <span>Review</span>
+          <strong>Known confusion</strong>
         </div>
       </section>
+
+      <section class="secondary-view hidden" id="secondaryView" aria-live="polite"></section>
     </main>
 
     <script src="./app.js"></script>

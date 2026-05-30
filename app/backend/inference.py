@@ -85,11 +85,13 @@ def read_hard_classes() -> set[str]:
 def read_confusion_pairs() -> set[tuple[str, str]]:
     """Read known confusion pairs when available."""
     raw_pairs = read_json(ARTIFACT_DIR / "confusion_pairs.json", [])
-    return {
-        (str(pair[0]), str(pair[1]))
-        for pair in raw_pairs
-        if isinstance(pair, (list, tuple)) and len(pair) >= 2
-    }
+    pairs = set()
+    for pair in raw_pairs:
+        if isinstance(pair, dict) and {"actual", "predicted"}.issubset(pair):
+            pairs.add((str(pair["actual"]), str(pair["predicted"])))
+        elif isinstance(pair, (list, tuple)) and len(pair) >= 2:
+            pairs.add((str(pair[0]), str(pair[1])))
+    return pairs
 
 
 def make_classifier_head(torch_nn: Any, in_features: int) -> Any:

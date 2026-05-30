@@ -48,10 +48,15 @@ const videoInput = document.querySelector("#videoInput");
 const imagePreview = document.querySelector("#imagePreview");
 const videoPreview = document.querySelector("#videoPreview");
 const previewEmpty = document.querySelector("#previewEmpty");
+const previewHelp = document.querySelector("#previewHelp");
 const imageZone = document.querySelector("#imageZone");
 const videoZone = document.querySelector("#videoZone");
+const fileHint = document.querySelector("#fileHint");
 const sampleButton = document.querySelector("#sampleButton");
 const clearButton = document.querySelector("#clearButton");
+const cameraButton = document.querySelector("#cameraButton");
+const notificationButton = document.querySelector("#notificationButton");
+const profileButton = document.querySelector("#profileButton");
 const decisionTitle = document.querySelector("#decisionTitle");
 const decisionBadge = document.querySelector("#decisionBadge");
 const topPrediction = document.querySelector("#topPrediction");
@@ -59,10 +64,84 @@ const confidenceValue = document.querySelector("#confidenceValue");
 const confidenceFill = document.querySelector("#confidenceFill");
 const actionCopy = document.querySelector("#actionCopy");
 const predictionList = document.querySelector("#predictionList");
+const modelName = document.querySelector("#modelName");
+const temperatureValue = document.querySelector("#temperatureValue");
+const artifactStatus = document.querySelector("#artifactStatus");
+const decisionAction = document.querySelector("#decisionTitle");
 const modeTabs = document.querySelectorAll(".mode-tab");
 const decisionTiles = document.querySelectorAll(".decision-tile");
+const navLinks = document.querySelectorAll(".top-nav a[data-view]");
+const brandLink = document.querySelector(".brand");
+const analysisLayout = document.querySelector(".analysis-layout");
+const decisionStrip = document.querySelector(".decision-strip");
+const secondaryView = document.querySelector("#secondaryView");
+const pageHeading = document.querySelector(".page-title h1");
+const scanMeta = document.querySelector("#scanMeta");
 
 let activeMode = "image";
+let noticeTimer;
+let currentObjectUrl;
+
+const FILE_HINTS = {
+  image: "Images: JPG, PNG, WebP, HEIC. One clear dish works best.",
+  video: "Videos: MP4, MOV, WebM. FoodLens samples key frames and aggregates predictions.",
+};
+
+const PREVIEW_HELP = {
+  image: "Upload a food image to begin analysis.",
+  video: "Upload a short food video to sample key frames.",
+};
+
+const SECONDARY_VIEWS = {
+  archive: {
+    title: "Archive",
+    meta: "Prototype demo data",
+    copy: "A sample archive view showing how saved predictions and review status could be organized.",
+    cards: [
+      ["Demo analyses", "4"],
+      ["Decision bands", "4 states"],
+      ["Review queue", "Prototype"],
+    ],
+    rows: [
+      ["Pho image", "pho", "34.91%", "Confirm"],
+      ["Steak sample", "filet mignon", "78.38%", "Suggest"],
+      ["Dessert upload", "ice cream", "54.76%", "Suggest"],
+      ["Salmon plate", "grilled salmon", "62.51%", "Confirm"],
+    ],
+  },
+  database: {
+    title: "Database",
+    meta: "Food-101 reference data",
+    copy: "A reference view based on the project scope: supported Food-101 labels and model risk concepts.",
+    cards: [
+      ["Classes", "101 food categories"],
+      ["Hard classes", "15 calibrated classes"],
+      ["Confusion pairs", "30 monitored pairs"],
+    ],
+    rows: [
+      ["Fine-grained meats", "filet mignon, steak, prime rib", "High", "Review"],
+      ["Japanese dishes", "sushi, sashimi, miso soup", "Medium", "Confirm"],
+      ["Noodle soups", "pho, ramen, wonton soup", "Medium", "Confirm"],
+      ["Desserts", "ice cream, cheesecake, tiramisu", "Low", "Suggest"],
+    ],
+  },
+  settings: {
+    title: "Settings",
+    meta: "Local prototype settings",
+    copy: "Current app-facing defaults for the local FoodLens prototype.",
+    cards: [
+      ["Model", "ResNet50 FT-V2"],
+      ["Temperature", "0.958111"],
+      ["Runtime", "Local API"],
+    ],
+    settings: [
+      ["Auto-accept threshold", "95%"],
+      ["Suggest band", "75-95%"],
+      ["Confirm band", "50-75%"],
+      ["Review band", "< 50%"],
+    ],
+  },
+};
 
 function formatLabel(label) {
   return label.replaceAll("_", " ");
@@ -70,6 +149,121 @@ function formatLabel(label) {
 
 function formatConfidence(value) {
   return `${(value * 100).toFixed(2)}%`;
+}
+
+function showNotice(message) {
+  const existingNotice = document.querySelector(".notice");
+  if (existingNotice) {
+    existingNotice.remove();
+  }
+
+  const notice = document.createElement("div");
+  notice.className = "notice";
+  notice.textContent = message;
+  document.body.append(notice);
+
+  window.clearTimeout(noticeTimer);
+  noticeTimer = window.setTimeout(() => notice.remove(), 2600);
+}
+
+function renderTabRows(view) {
+  if (view.settings) {
+    return `
+      <div class="settings-panel">
+        ${view.settings
+          .map(
+            ([label, value]) => `
+              <article class="setting-item">
+                <label>${label}</label>
+                <strong>${value}</strong>
+              </article>
+            `,
+          )
+          .join("")}
+      </div>
+    `;
+  }
+
+  return `
+    <div class="tab-table" role="table">
+      <div class="tab-row header" role="row">
+        <span>Item</span>
+        <span>Focus</span>
+        <span>Score</span>
+        <span>Status</span>
+      </div>
+      ${view.rows
+        .map(
+          ([item, focus, score, status]) => `
+            <div class="tab-row" role="row">
+              <strong>${item}</strong>
+              <span>${focus}</span>
+              <span>${score}</span>
+              <span class="status-pill">${status}</span>
+            </div>
+          `,
+        )
+        .join("")}
+    </div>
+  `;
+}
+
+function showView(viewName) {
+  navLinks.forEach((link) => {
+    link.classList.toggle("active", link.dataset.view === viewName);
+  });
+
+  if (viewName === "analysis") {
+    pageHeading.textContent = "Analysis Result";
+    scanMeta.textContent = "FoodLens · ResNet50 FT-V2 · Calibrated";
+    analysisLayout.classList.remove("hidden");
+    decisionStrip.classList.remove("hidden");
+    secondaryView.classList.add("hidden");
+    secondaryView.innerHTML = "";
+    return;
+  }
+
+  const view = SECONDARY_VIEWS[viewName];
+  if (!view) {
+    return;
+  }
+
+  pageHeading.textContent = view.title;
+  scanMeta.textContent = view.meta;
+  analysisLayout.classList.add("hidden");
+  decisionStrip.classList.add("hidden");
+  secondaryView.classList.remove("hidden");
+  secondaryView.innerHTML = `
+    <div class="tab-dashboard">
+      <div class="tab-hero">
+        <div>
+          <h2>${view.title}</h2>
+          <p>${view.copy}</p>
+        </div>
+        <div class="tab-actions">
+          <button class="tab-action" type="button">Export</button>
+          <button class="tab-action" type="button">Refresh</button>
+        </div>
+      </div>
+      <div class="secondary-grid">
+        ${view.cards
+          .map(
+            ([label, value]) => `
+              <article class="secondary-card">
+                <span>${label}</span>
+                <strong>${value}</strong>
+              </article>
+            `,
+          )
+          .join("")}
+      </div>
+      ${renderTabRows(view)}
+    </div>
+  `;
+
+  secondaryView.querySelectorAll(".tab-action").forEach((button) => {
+    button.addEventListener("click", () => showNotice(`${button.textContent} is ready.`));
+  });
 }
 
 function setPreview(type, source) {
@@ -87,6 +281,10 @@ function setPreview(type, source) {
 }
 
 function clearPreview() {
+  if (currentObjectUrl) {
+    URL.revokeObjectURL(currentObjectUrl);
+    currentObjectUrl = undefined;
+  }
   imagePreview.removeAttribute("src");
   videoPreview.removeAttribute("src");
   imagePreview.style.display = "none";
@@ -99,12 +297,19 @@ function renderPredictions(result) {
   const decision = result.decision;
 
   decisionTitle.textContent = result.title;
+  decisionAction.className = `confirm-button action-${decision}`;
   decisionBadge.textContent = DECISION_LABELS[decision];
   decisionBadge.className = `decision-badge ${BADGE_CLASSES[decision]}`;
   topPrediction.textContent = formatLabel(label);
   confidenceValue.textContent = formatConfidence(confidence);
   confidenceFill.style.width = formatConfidence(confidence);
+  confidenceFill.className = confidence < 0.4 ? "low" : confidence < 0.75 ? "medium" : "";
   actionCopy.textContent = result.action;
+  modelName.textContent = result.modelName || "ResNet50 FT-V2";
+  temperatureValue.textContent = result.temperature
+    ? Number(result.temperature).toFixed(6)
+    : "0.958111";
+  artifactStatus.textContent = result.artifactStatus || "Mock";
 
   predictionList.innerHTML = result.predictions
     .map(
@@ -127,6 +332,9 @@ function normalizeApiResult(apiResult) {
     decision: apiResult.decision.band,
     title: apiResult.decision.title,
     action: apiResult.decision.recommended_action,
+    modelName: apiResult.model_name,
+    temperature: apiResult.temperature,
+    artifactStatus: apiResult.artifact_status,
     predictions: apiResult.top_predictions.map((prediction) => [
       prediction.class_name,
       prediction.confidence,
@@ -150,13 +358,125 @@ async function predictWithBackend(file, type) {
   return normalizeApiResult(await response.json());
 }
 
+function waitForEvent(element, eventName) {
+  return new Promise((resolve, reject) => {
+    const onSuccess = () => {
+      element.removeEventListener(eventName, onSuccess);
+      element.removeEventListener("error", onError);
+      resolve();
+    };
+    const onError = () => {
+      element.removeEventListener(eventName, onSuccess);
+      element.removeEventListener("error", onError);
+      reject(new Error(`Video ${eventName} failed.`));
+    };
+    element.addEventListener(eventName, onSuccess, { once: true });
+    element.addEventListener("error", onError, { once: true });
+  });
+}
+
+async function seekVideo(video, seconds) {
+  video.currentTime = seconds;
+  await waitForEvent(video, "seeked");
+}
+
+async function frameToBlob(video) {
+  const scale = Math.min(1, 640 / Math.max(video.videoWidth, video.videoHeight));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(video.videoWidth * scale));
+  canvas.height = Math.max(1, Math.round(video.videoHeight * scale));
+  const context = canvas.getContext("2d");
+  context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(
+      (blob) => {
+        if (blob) {
+          resolve(blob);
+        } else {
+          reject(new Error("Could not extract frame."));
+        }
+      },
+      "image/jpeg",
+      0.88,
+    );
+  });
+}
+
+function aggregateFrameResults(frameResults) {
+  const classScores = new Map();
+  let artifactStatus = "ready";
+  let temperature = 0.958111;
+  let modelName = "ResNet50 FT-V2";
+
+  frameResults.forEach((result) => {
+    artifactStatus = result.artifactStatus || artifactStatus;
+    temperature = result.temperature || temperature;
+    modelName = result.modelName || modelName;
+    result.predictions.forEach(([className, score]) => {
+      classScores.set(className, (classScores.get(className) || 0) + score / frameResults.length);
+    });
+  });
+
+  const predictions = [...classScores.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5);
+  const topConfidence = predictions[0]?.[1] || 0;
+  const decision = topConfidence >= 0.7 ? "suggest" : "confirm";
+
+  return {
+    decision,
+    title: decision === "suggest" ? "Show suggestions" : "Confirm dish",
+    action: `Video analysis sampled ${frameResults.length} key frames. Confirm the label if the clip contains multiple foods or scene changes.`,
+    modelName,
+    temperature,
+    artifactStatus,
+    predictions,
+  };
+}
+
+async function predictVideoFrames(source) {
+  const video = document.createElement("video");
+  video.src = source;
+  video.muted = true;
+  video.playsInline = true;
+  video.preload = "auto";
+
+  await waitForEvent(video, "loadedmetadata");
+  const duration = Number.isFinite(video.duration) && video.duration > 0 ? video.duration : 1;
+  const frameCount = Math.min(5, Math.max(1, Math.ceil(duration / 2)));
+  const frameTimes = Array.from({ length: frameCount }, (_, index) => {
+    if (frameCount === 1) {
+      return Math.min(0.1, duration * 0.5);
+    }
+    return Math.min(duration - 0.05, (duration * (index + 1)) / (frameCount + 1));
+  });
+
+  const frameResults = [];
+  for (const frameTime of frameTimes) {
+    await seekVideo(video, Math.max(0, frameTime));
+    const frameBlob = await frameToBlob(video);
+    const frameFile = new File([frameBlob], "foodlens_video_frame.jpg", {
+      type: "image/jpeg",
+    });
+    frameResults.push(await predictWithBackend(frameFile, "image"));
+  }
+
+  return aggregateFrameResults(frameResults);
+}
+
 function resetResult() {
   decisionTitle.textContent = "Ready";
+  decisionAction.className = "confirm-button";
   decisionBadge.textContent = "Waiting";
   decisionBadge.className = "decision-badge badge-neutral";
   topPrediction.textContent = "No image selected";
   confidenceValue.textContent = "0.00%";
   confidenceFill.style.width = "0%";
+  confidenceFill.className = "";
+  modelName.textContent = "ResNet50 FT-V2";
+  temperatureValue.textContent = "0.958111";
+  artifactStatus.textContent = "Ready";
   actionCopy.textContent =
     "FoodLens will show calibrated top-k predictions after an input is selected.";
   predictionList.innerHTML = "";
@@ -168,6 +488,8 @@ function setMode(mode) {
   modeTabs.forEach((tab) => tab.classList.toggle("active", tab.dataset.mode === mode));
   imageZone.classList.toggle("hidden", mode !== "image");
   videoZone.classList.toggle("hidden", mode !== "video");
+  fileHint.textContent = FILE_HINTS[mode];
+  previewHelp.textContent = PREVIEW_HELP[mode];
   clearPreview();
   resetResult();
 }
@@ -176,11 +498,22 @@ async function handleFile(file, type) {
   if (!file) {
     return;
   }
+  if (currentObjectUrl) {
+    URL.revokeObjectURL(currentObjectUrl);
+  }
   const source = URL.createObjectURL(file);
+  currentObjectUrl = source;
   setPreview(type, source);
+  actionCopy.textContent =
+    type === "video"
+      ? "Sampling video frames and running FoodLens classification."
+      : "Running FoodLens classification.";
+  decisionBadge.textContent = "Analyzing";
+  decisionBadge.className = "decision-badge badge-neutral";
 
   try {
-    const apiResult = await predictWithBackend(file, type);
+    const apiResult =
+      type === "video" ? await predictVideoFrames(source) : await predictWithBackend(file, type);
     renderPredictions(apiResult);
   } catch (error) {
     console.warn("Using mock predictions because backend is unavailable.", error);
@@ -192,6 +525,13 @@ modeTabs.forEach((tab) => {
   tab.addEventListener("click", () => setMode(tab.dataset.mode));
 });
 
+navLinks.forEach((link) => {
+  link.addEventListener("click", (event) => {
+    event.preventDefault();
+    showView(link.dataset.view);
+  });
+});
+
 imageInput.addEventListener("change", (event) => {
   handleFile(event.target.files[0], "image");
 });
@@ -200,16 +540,47 @@ videoInput.addEventListener("change", (event) => {
   handleFile(event.target.files[0], "video");
 });
 
+cameraButton.addEventListener("click", () => {
+  showView("analysis");
+  if (activeMode === "video") {
+    videoInput.click();
+  } else {
+    imageInput.click();
+  }
+});
+
+notificationButton.addEventListener("click", () => {
+  showNotice("No new analysis alerts.");
+});
+
+profileButton.addEventListener("click", () => {
+  showNotice("Local analyst profile is ready.");
+});
+
 sampleButton.addEventListener("click", () => {
+  showView("analysis");
+  if (activeMode !== "image") {
+    setMode("image");
+  }
   setPreview("image", SAMPLE_IMAGE);
-  renderPredictions(MOCK_RESULTS[activeMode]);
+  renderPredictions(MOCK_RESULTS.image);
 });
 
 clearButton.addEventListener("click", () => {
+  showView("analysis");
   imageInput.value = "";
   videoInput.value = "";
   clearPreview();
   resetResult();
+});
+
+decisionAction.addEventListener("click", () => {
+  showNotice("Decision captured for this local prototype.");
+});
+
+brandLink.addEventListener("click", (event) => {
+  event.preventDefault();
+  showView("analysis");
 });
 
 resetResult();

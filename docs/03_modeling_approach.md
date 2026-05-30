@@ -224,7 +224,49 @@ Decision expected:
 
 Notebook 6 is the demo layer for the project.
 
-## 9. Cross-Notebook Evaluation Contract
+## 9. Notebook 7: Explore Multi-Food Detection
+
+Notebook:
+[`../notebooks/07_multi_food_detection_exploration.ipynb`](../notebooks/07_multi_food_detection_exploration.ipynb)
+
+Question:
+
+> Can a pretrained detector propose useful food regions for images or sampled
+> video frames?
+
+Logic flow:
+
+1. Load a pretrained detector such as YOLO.
+2. Process one image or sampled video frames.
+3. Export bounding boxes, detector labels, confidence scores, crops, and
+   annotated figures.
+4. Review whether the detected regions are usable enough for crop
+   classification.
+
+Notebook 7 is an exploration layer. It does not replace the FoodLens classifier.
+
+## 10. Notebook 8: Classify Detected Crops
+
+Notebook:
+[`../notebooks/08_detection_to_foodlens_pipeline.ipynb`](../notebooks/08_detection_to_foodlens_pipeline.ipynb)
+
+Question:
+
+> Can detected regions be classified with the existing ResNet50 FT-V2 Food-101
+> model?
+
+Logic flow:
+
+1. Load detections and crops from Notebook 7.
+2. Load the FoodLens ResNet50 FT-V2 classifier and class names.
+3. Predict top-k Food-101 labels for each crop.
+4. Apply simple decision bands per detected region.
+5. Export `multi_food_predictions.csv` for later API and frontend integration.
+
+Notebook 8 is the bridge from detection exploration to a multi-food FoodLens
+workflow.
+
+## 11. Cross-Notebook Evaluation Contract
 
 All notebooks should preserve the same **comparison contract**:
 
@@ -239,12 +281,13 @@ All notebooks should preserve the same **comparison contract**:
 | Calibration | confidence quality for the champion model |
 | Decision layer | action bands, coverage, and accuracy by band |
 | Demo inference | top-k predictions and user-facing action for sample images |
+| Detection | bounding boxes, crop exports, and per-region predictions |
 
 This keeps model changes interpretable. A new experiment should explain **what
 changed**, **why it changed**, and whether the result is strong enough to alter
 the project direction.
 
-## 10. Current Reasoning Conclusion
+## 12. Current Reasoning Conclusion
 
 The current champion is **ResNet50 FT-V2**. The project has moved from general
 model search to **targeted improvement and decision design**:
@@ -254,5 +297,6 @@ model search to **targeted improvement and decision design**:
 3. Improve **deterministic single-image inference**.
 4. Define **product decision bands** from calibrated predictions.
 5. Demonstrate the final **user-facing prediction workflow**.
-6. Revisit compact models only if **deployment constraints** become more
+6. Extend toward **multi-food detection** through detector crops.
+7. Revisit compact models only if **deployment constraints** become more
    important than accuracy.

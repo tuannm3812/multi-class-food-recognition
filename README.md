@@ -1,4 +1,4 @@
-# Multi-Class Food Recognition
+# FoodLens: Food Recognition
 
 <img src="https://www.meatdistrictco.com.au/wp-content/uploads/2024/08/0O2A0384-1700x660.jpg" alt="Food recognition project banner" width="100%">
 
@@ -7,9 +7,10 @@
 ![Computer Vision](https://img.shields.io/badge/Domain-Computer%20Vision-455A64?style=flat-square)
 ![Status](https://img.shields.io/badge/Status-Champion%20Model-2E7D32?style=flat-square)
 
-**Food-101 image classification** project focused on building a reliable
-baseline, improving it with controlled experiments, and translating model
-performance into practical food-recognition decisions.
+**FoodLens** is a computer-vision project for food recognition. It starts with
+calibrated **Food-101 image classification** and now extends toward
+**multi-food detection**, where visible dishes can be detected, cropped,
+classified, and routed through a product decision layer.
 
 ## 1. Project Overview
 
@@ -17,10 +18,12 @@ Food recognition is a **fine-grained computer vision** problem. Many dishes
 share similar colors, ingredients, textures, and plating styles, so the model
 needs to be evaluated beyond a single accuracy score.
 
-This project classifies Food-101 images into **101 food categories**. The work
-is structured around **reproducible notebooks** because the project is
-exploratory: each notebook records the reasoning, code, metrics, errors, and
-model artifacts for one experiment stage.
+This project classifies Food-101 images into **101 food categories** and uses
+that classifier as the foundation for a FoodLens app prototype. The next phase
+adds detector-generated crops so the system can move beyond one label per
+image. The work is structured around **reproducible notebooks** because each
+notebook records the reasoning, code, metrics, errors, and model artifacts for
+one experiment stage.
 
 | Item | Value |
 | --- | ---: |
@@ -137,22 +140,26 @@ much smaller, but its accuracy was not competitive for the current target.
 | `04_resnet50_error_calibration_inference.ipynb` | Analyzes the champion with calibration metrics, hard-class reports, high-confidence errors, and deterministic single-image inference. |
 | `05_confidence_decision_layer.ipynb` | Converts calibrated predictions into product actions: auto-accept, show suggestions, request confirmation, or review. |
 | `06_food_recognition_demo_inference.ipynb` | Demonstrates the final single-image workflow with top-k predictions, calibrated confidence, decision action, and CSV demo exports. |
+| `07_multi_food_detection_exploration.ipynb` | Explores pretrained detection on food images and videos, exporting bounding boxes, crops, and detection metadata. |
+| `08_detection_to_foodlens_pipeline.ipynb` | Connects detected crops to the existing FoodLens classifier and decision layer for per-food predictions. |
 
 ## 9. Product Direction: FoodLens
 
-The next product direction is **FoodLens**, an image-first food-recognition
-assistant. FoodLens should use the final model workflow to identify dishes from
+The product direction is **FoodLens**, an image-first food-recognition
+assistant. FoodLens uses the final model workflow to identify dishes from
 uploaded images, show ranked predictions, and choose the right product action:
 **auto-accept**, **suggest**, **confirm**, or **review**.
 
-The recommended MVP is an **image upload app** backed by a lightweight inference
-API. Video recognition should come later through frame sampling once the image
-workflow is reliable.
+The current MVP is an **image/video upload app** backed by a lightweight
+inference API. Image prediction uses the ResNet50 FT-V2 artifacts when present.
+Video prediction samples frames and aggregates image-classifier outputs. The
+next phase is **multi-food detection**, where a detector proposes regions and
+the classifier labels each crop.
 
 The first static frontend concept is available at
-[`app/frontend/index.html`](app/frontend/index.html). It uses mocked predictions
-for now and will connect to a real inference API after the model artifacts are
-placed outside git.
+[`app/frontend/index.html`](app/frontend/index.html). It connects to the local
+FoodLens API and uses real ResNet50 FT-V2 artifacts when they are available
+under `app/artifacts/`, with mock fallback behavior for missing artifacts.
 
 Notebook 6 exports the lightweight JSON artifacts required by the FoodLens
 backend. The ResNet50 FT-V2 `.pth` checkpoint remains a separate Kaggle model
@@ -165,6 +172,8 @@ Detailed approach, result notes, and next steps are indexed in
 [docs/04_model_results.md](docs/04_model_results.md), and
 [docs/05_next_steps.md](docs/05_next_steps.md). The FoodLens product concept
 is documented in [docs/06_foodlens_app_concept.md](docs/06_foodlens_app_concept.md).
+The multi-food detection plan is documented in
+[docs/07_multi_food_detection_plan.md](docs/07_multi_food_detection_plan.md).
 
 Banner image source:
 [`meatdistrictco.com.au`](https://www.meatdistrictco.com.au/wp-content/uploads/2024/08/0O2A0384-1700x660.jpg)

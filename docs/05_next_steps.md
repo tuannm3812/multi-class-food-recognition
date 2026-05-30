@@ -143,7 +143,30 @@ Next action:
 > Package the final project story: champion model, calibration, decision layer,
 > and four-band demo behavior.
 
-## 6. Secondary Improvements
+## 6. Multi-Food Detection Phase
+
+The next product capability is **multi-food detection**. The current FoodLens
+classifier predicts one label for a whole image or sampled video frame. It does
+not locate multiple foods.
+
+Recommended next implementation:
+
+1. Run a pretrained detector such as YOLO or RT-DETR to propose food/object
+   regions.
+2. Export bounding boxes and crop images.
+3. Classify each crop with the existing ResNet50 FT-V2 Food-101 classifier.
+4. Apply the calibrated decision layer per crop.
+5. Return one FoodLens prediction object per detected food region.
+
+New notebooks:
+
+- `07_multi_food_detection_exploration.ipynb`
+- `08_detection_to_foodlens_pipeline.ipynb`
+
+This should stay in the same repo because it is a direct extension of the
+FoodLens product workflow.
+
+## 7. Secondary Improvements
 
 After the decision layer is in place, the next improvements should be scoped
 and evidence-driven:
@@ -161,7 +184,7 @@ and evidence-driven:
 6. **Compact model revisit:** revisit EfficientNet-B0 or another small model
    only if deployment size becomes more important than accuracy.
 
-## 7. Stop Conditions
+## 8. Stop Conditions
 
 Avoid expanding the project endlessly. A next experiment should be skipped if
 it does not improve at least one of these:
