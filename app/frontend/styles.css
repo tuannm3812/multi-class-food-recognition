@@ -190,19 +190,19 @@ input:focus-visible,
 
 .detection-box span {
   position: absolute;
-  left: -2px;
-  top: -26px;
-  max-width: 180px;
-  padding: 4px 8px;
-  overflow: hidden;
-  border-radius: 999px;
+  left: -10px;
+  top: -10px;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 2px solid white;
+  border-radius: 50%;
   background: var(--red);
   color: white;
   font-size: 0.66rem;
   font-weight: 700;
-  text-overflow: ellipsis;
-  text-transform: uppercase;
-  white-space: nowrap;
+  box-shadow: 0 6px 14px rgba(31, 21, 20, 0.2);
 }
 
 .preview-empty {
@@ -560,6 +560,13 @@ input:focus-visible,
   font-family: var(--font-display);
   font-size: 1.15rem;
   letter-spacing: -0.03em;
+}
+
+.panel-heading p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.35;
 }
 
 .panel-heading > strong {

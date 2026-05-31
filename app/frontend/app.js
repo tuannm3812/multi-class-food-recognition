@@ -413,6 +413,9 @@ function summarizeMultiFoodResult(appResult) {
   const confirmed = predictions.filter(
     (prediction) => prediction.foodlens.decision_band === "confirm",
   ).length;
+  const reviewed = predictions.filter(
+    (prediction) => prediction.foodlens.decision_band === "review",
+  ).length;
   const strongestPrediction = predictions
     .slice()
     .sort((a, b) => b.foodlens.top_confidence - a.foodlens.top_confidence)[0];
@@ -420,7 +423,7 @@ function summarizeMultiFoodResult(appResult) {
   return {
     decision: accepted > 0 ? "suggest" : "confirm",
     title: accepted > 0 ? "Review regions" : "Confirm crops",
-    action: `${predictions.length} crops analyzed. ${accepted} auto-accept, ${suggested} suggest, ${confirmed} confirm.`,
+    action: `${predictions.length} crops analyzed. ${accepted} auto-accept, ${suggested} suggest, ${confirmed} confirm, ${reviewed} review.`,
     modelName: `${appResult.model || "ResNet50 FT-V2"} · Multi-food`,
     temperature: appResult.temperature,
     artifactStatus: appResult.detector_status || appResult.artifact_status || "JSON ready",
@@ -479,15 +482,13 @@ function renderDetectionOverlay(appResult) {
     const sourceWidth = bbox.source_width || metrics.naturalWidth;
     const sourceHeight = bbox.source_height || metrics.naturalHeight;
     const box = document.createElement("div");
-    const label = formatLabel(prediction.foodlens.top_label);
-    const confidence = formatConfidence(prediction.foodlens.top_confidence);
 
     box.className = "detection-box";
     box.style.left = `${(bbox.x1 / sourceWidth) * 100}%`;
     box.style.top = `${(bbox.y1 / sourceHeight) * 100}%`;
     box.style.width = `${((bbox.x2 - bbox.x1) / sourceWidth) * 100}%`;
     box.style.height = `${((bbox.y2 - bbox.y1) / sourceHeight) * 100}%`;
-    box.innerHTML = `<span>${String(index + 1).padStart(2, "0")} · ${label} ${confidence}</span>`;
+    box.innerHTML = `<span>${String(index + 1).padStart(2, "0")}</span>`;
     detectionOverlay.append(box);
   });
 }
@@ -526,7 +527,7 @@ function renderMultiFoodResults(appResult) {
               <strong>${confidence}</strong>
             </div>
             <h3>${label}</h3>
-            <p>${prediction.source_id.replaceAll("_", " ")} · detector ${detectorLabel}</p>
+            <p>${prediction.source_id.replaceAll("_", " ")} · region proposal · ${detectorLabel}</p>
             <small>${topAlternatives || "No alternatives"}</small>
           </div>
         </article>
