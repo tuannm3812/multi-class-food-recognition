@@ -36,14 +36,14 @@ app/backend/api.py
 Run it locally:
 
 ```bash
-pip install fastapi uvicorn python-multipart
+pip install -r app/backend/requirements.txt
 uvicorn app.backend.api:app --reload --port 8000
 ```
 
 For live multi-food detection, install the optional detector runtime as well:
 
 ```bash
-pip install ultralytics
+pip install -r app/backend/requirements-detector.txt
 ```
 
 Endpoints:
@@ -62,8 +62,9 @@ mock predictions so the frontend still works.
 The multi-food endpoint follows the Notebook 8 response contract so the app can
 render detected regions, crop-level FoodLens predictions, decision bands, and
 artifact references. When `ultralytics` and the model artifacts are available,
-it runs YOLO proposals followed by the FoodLens crop classifier. Otherwise, it
-falls back to a deterministic prototype response.
+it runs YOLO proposals followed by the FoodLens crop classifier and returns
+`detector_status: live_yolo`. Otherwise, it falls back to a deterministic
+prototype response with `detector_status: fallback_demo`.
 
 ## Artifact Requirements
 

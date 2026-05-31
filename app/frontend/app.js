@@ -419,7 +419,7 @@ function summarizeMultiFoodResult(appResult) {
     action: `${predictions.length} crops analyzed. ${accepted} auto-accept, ${suggested} suggest, ${confirmed} confirm.`,
     modelName: `${appResult.model || "ResNet50 FT-V2"} · Multi-food`,
     temperature: appResult.temperature,
-    artifactStatus: appResult.artifact_status || "JSON ready",
+    artifactStatus: appResult.detector_status || appResult.artifact_status || "JSON ready",
     predictions: strongestPrediction
       ? strongestPrediction.foodlens.top_k_predictions
       : [["no_detection", 0]],

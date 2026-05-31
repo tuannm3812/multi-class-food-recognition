@@ -86,6 +86,7 @@ class MultiFoodPredictionResponse(BaseModel):
     temperature: float
     top_k: int
     decision_thresholds: dict[str, float]
+    detector_status: str
     crop_count: int
     predictions: list[MultiFoodPrediction]
     artifact_status: str
