@@ -40,6 +40,12 @@ pip install fastapi uvicorn python-multipart
 uvicorn app.backend.api:app --reload --port 8000
 ```
 
+For live multi-food detection, install the optional detector runtime as well:
+
+```bash
+pip install ultralytics
+```
+
 Endpoints:
 
 ```text
@@ -55,8 +61,9 @@ mock predictions so the frontend still works.
 
 The multi-food endpoint follows the Notebook 8 response contract so the app can
 render detected regions, crop-level FoodLens predictions, decision bands, and
-artifact references. It currently returns a deterministic prototype response;
-live detector inference is the next backend integration step.
+artifact references. When `ultralytics` and the model artifacts are available,
+it runs YOLO proposals followed by the FoodLens crop classifier. Otherwise, it
+falls back to a deterministic prototype response.
 
 ## Artifact Requirements
 
@@ -101,5 +108,6 @@ Expected JSON shapes:
 
 ## Next Build Step
 
-The next implementation step is replacing the deterministic multi-food response
-with live detector output from Notebook 7 and crop classification from Notebook 8.
+The next implementation step is improving the detector quality with a
+food-specific detection or segmentation model, because generic COCO detectors
+still miss many plated foods and often localize containers instead of dishes.

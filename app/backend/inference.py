@@ -2,6 +2,7 @@
 
 from io import BytesIO
 import json
+import os
 from pathlib import Path
 from typing import Any, Optional
 
@@ -27,6 +28,11 @@ DEFAULT_POLICY = {
     "suggest_confidence": 0.35,
     "margin_threshold": 0.40,
 }
+MULTI_FOOD_POLICY = {
+    "auto_confidence": 0.85,
+    "suggest_confidence": 0.50,
+    "margin_threshold": 0.40,
+}
 DEFAULT_HARD_CLASSES = {
     "chocolate_mousse",
     "steak",
@@ -34,6 +40,26 @@ DEFAULT_HARD_CLASSES = {
     "bread_pudding",
     "tuna_tartare",
 }
+DETECTOR_WEIGHTS = "yolo11n.pt"
+DETECTOR_CONFIDENCE_THRESHOLD = 0.25
+DETECTOR_IOU_THRESHOLD = 0.50
+DETECTOR_MAX_DETECTIONS = 20
+MIN_CROP_AREA_RATIO = 0.015
+MAX_CROP_AREA_RATIO = 0.80
+CANDIDATE_REGION_LABELS = {
+    "apple",
+    "banana",
+    "bowl",
+    "broccoli",
+    "cake",
+    "carrot",
+    "donut",
+    "hot dog",
+    "orange",
+    "pizza",
+    "sandwich",
+}
+DIRECT_FOOD_LABELS = CANDIDATE_REGION_LABELS - {"bowl"}
 
 MOCK_IMAGE_PREDICTIONS: tuple[tuple[str, float], ...] = (
     ("steak", 0.7838),
@@ -226,6 +252,48 @@ def build_predictions(raw_predictions: tuple[tuple[str, float], ...]) -> list[Pr
     ]
 
 
+def detector_region_role(detector_label: str) -> str:
+    """Map a generic detector label to its FoodLens proposal role."""
+    if detector_label in DIRECT_FOOD_LABELS:
+        return "direct_food"
+    if detector_label == "bowl":
+        return "serving_container"
+    if detector_label == "whole_image":
+        return "fallback_region"
+    return "context_object"
+
+
+def should_export_detection(detector_label: str, area_ratio: float) -> bool:
+    """Return whether a detector box is useful as a classifier crop."""
+    return (
+        detector_label in CANDIDATE_REGION_LABELS
+        and MIN_CROP_AREA_RATIO <= area_ratio <= MAX_CROP_AREA_RATIO
+    )
+
+
+def classify_pil_image(image: Any, runtime: dict[str, Any]) -> list[Prediction]:
+    """Classify one PIL image with the loaded FoodLens classifier."""
+    torch = runtime["torch"]
+    functional = runtime["functional"]
+    image_tensor = runtime["transform"](image).unsqueeze(0).to(runtime["device"])
+
+    with torch.no_grad():
+        logits = runtime["model"](image_tensor).cpu()
+        probabilities = functional.softmax(logits / runtime["temperature"], dim=1)
+        top_probabilities, top_indices = probabilities.topk(5, dim=1)
+
+    return [
+        Prediction(
+            rank=rank + 1,
+            class_name=runtime["class_names"][class_index],
+            confidence=confidence,
+        )
+        for rank, (class_index, confidence) in enumerate(
+            zip(top_indices[0].tolist(), top_probabilities[0].tolist())
+        )
+    ]
+
+
 def build_decision(
     mode: str,
     predictions: list[Prediction],
@@ -361,15 +429,193 @@ def build_multi_food_mock() -> MultiFoodPredictionResponse:
     )
 
 
+def detect_candidate_regions(image: Any) -> list[dict[str, Any]]:
+    """Detect candidate food regions with YOLO when Ultralytics is available."""
+    try:
+        from ultralytics import YOLO
+    except ImportError as exc:
+        raise RuntimeError("Multi-food detection requires ultralytics.") from exc
+
+    weights = os.getenv("FOODLENS_DETECTOR_WEIGHTS", DETECTOR_WEIGHTS)
+    detector = YOLO(weights)
+    result = detector.predict(
+        source=image,
+        conf=DETECTOR_CONFIDENCE_THRESHOLD,
+        iou=DETECTOR_IOU_THRESHOLD,
+        max_det=DETECTOR_MAX_DETECTIONS,
+        verbose=False,
+    )[0]
+
+    source_width, source_height = image.size
+    source_area = source_width * source_height
+    rows: list[dict[str, Any]] = []
+
+    boxes = result.boxes
+    if boxes is None:
+        return rows
+
+    for detection_index, box in enumerate(boxes):
+        x1, y1, x2, y2 = [int(value) for value in box.xyxy[0].tolist()]
+        x1 = max(0, min(x1, source_width))
+        x2 = max(0, min(x2, source_width))
+        y1 = max(0, min(y1, source_height))
+        y2 = max(0, min(y2, source_height))
+        if x2 <= x1 or y2 <= y1:
+            continue
+
+        detector_class_id = int(box.cls[0])
+        detector_label = str(result.names.get(detector_class_id, detector_class_id))
+        crop_area_ratio = ((x2 - x1) * (y2 - y1)) / source_area
+        if not should_export_detection(detector_label, crop_area_ratio):
+            continue
+
+        rows.append(
+            {
+                "detection_index": detection_index,
+                "detector_label": detector_label,
+                "proposal_role": detector_region_role(detector_label),
+                "detector_confidence": float(box.conf[0]),
+                "crop_area_ratio": crop_area_ratio,
+                "x1": x1,
+                "y1": y1,
+                "x2": x2,
+                "y2": y2,
+                "source_width": source_width,
+                "source_height": source_height,
+            }
+        )
+
+    return rows
+
+
+def build_full_image_region(image: Any) -> dict[str, Any]:
+    """Build a fallback region when the detector produces no usable crops."""
+    source_width, source_height = image.size
+    return {
+        "detection_index": 0,
+        "detector_label": "whole_image",
+        "proposal_role": detector_region_role("whole_image"),
+        "detector_confidence": 1.0,
+        "crop_area_ratio": 1.0,
+        "x1": 0,
+        "y1": 0,
+        "x2": source_width,
+        "y2": source_height,
+        "source_width": source_width,
+        "source_height": source_height,
+    }
+
+
+def build_multi_food_response(
+    image: Any,
+    detection_rows: list[dict[str, Any]],
+    runtime: dict[str, Any],
+) -> MultiFoodPredictionResponse:
+    """Classify detected regions and return the app-ready multi-food response."""
+    predictions: list[MultiFoodPrediction] = []
+
+    for region_index, row in enumerate(detection_rows):
+        crop = image.crop((row["x1"], row["y1"], row["x2"], row["y2"]))
+        crop_predictions = classify_pil_image(crop, runtime)
+        decision = build_decision(
+            "image",
+            crop_predictions,
+            policy=MULTI_FOOD_POLICY,
+            hard_classes=runtime["hard_classes"],
+            confusion_pairs=runtime["confusion_pairs"],
+        )
+        crop_name = f"uploaded_image_crop_{region_index:02d}.jpg"
+
+        predictions.append(
+            MultiFoodPrediction(
+                source_id="uploaded_image",
+                detection_index=int(row["detection_index"]),
+                bbox=BoundingBox(
+                    x1=int(row["x1"]),
+                    y1=int(row["y1"]),
+                    x2=int(row["x2"]),
+                    y2=int(row["y2"]),
+                    source_width=int(row["source_width"]),
+                    source_height=int(row["source_height"]),
+                ),
+                detector=DetectorRegion(
+                    label=str(row["detector_label"]),
+                    proposal_role=str(row["proposal_role"]),
+                    confidence=float(row["detector_confidence"]),
+                    crop_area_ratio=float(row["crop_area_ratio"]),
+                ),
+                foodlens=FoodLensRegionPrediction(
+                    top_label=crop_predictions[0].class_name,
+                    top_confidence=crop_predictions[0].confidence,
+                    decision_band=decision.band,
+                    top_k_predictions=[
+                        (prediction.class_name, prediction.confidence)
+                        for prediction in crop_predictions
+                    ],
+                ),
+                artifacts=RegionArtifacts(
+                    crop_path=f"runtime/{crop_name}",
+                    crop_artifact_path=f"app://runtime/crops/{crop_name}",
+                    figure_path="runtime/uploaded_image_detections.jpg",
+                ),
+            )
+        )
+
+    return MultiFoodPredictionResponse(
+        model=MODEL_NAME,
+        temperature=runtime["temperature"],
+        top_k=5,
+        decision_thresholds={
+            "auto_accept": MULTI_FOOD_POLICY["auto_confidence"],
+            "suggest": MULTI_FOOD_POLICY["suggest_confidence"],
+        },
+        crop_count=len(predictions),
+        predictions=predictions,
+        artifact_status="ready",
+    )
+
+
 def predict_multi_food_image_bytes(image_bytes: bytes) -> MultiFoodPredictionResponse:
     """Return multi-food predictions for an uploaded image.
 
-    The current app backend exposes the Notebook 8 response contract using a
-    deterministic prototype response. Live detector inference can replace this
-    function without changing the frontend contract.
+    Uses live detector proposals and FoodLens crop classification when
+    dependencies and artifacts are available. Falls back to a deterministic
+    Notebook 8-style response when the detector runtime is unavailable.
     """
-    _ = image_bytes
-    return build_multi_food_mock()
+    if artifact_status() != "ready":
+        return build_multi_food_mock()
+
+    try:
+        runtime = load_runtime()
+        image = runtime["image_class"].open(BytesIO(image_bytes)).convert("RGB")
+        detections = detect_candidate_regions(image)
+        if not detections:
+            detections = [build_full_image_region(image)]
+        return build_multi_food_response(image, detections, runtime)
+    except Exception:
+        return build_multi_food_mock()
+
+
+def build_prediction_response(
+    image: Any,
+    runtime: dict[str, Any],
+) -> PredictionResponse:
+    """Build a single-image prediction response from an RGB image."""
+    predictions = classify_pil_image(image, runtime)
+    return PredictionResponse(
+        model_name=MODEL_NAME,
+        mode="image",
+        temperature=runtime["temperature"],
+        top_predictions=predictions,
+        decision=build_decision(
+            "image",
+            predictions,
+            policy=runtime["policy"],
+            hard_classes=runtime["hard_classes"],
+            confusion_pairs=runtime["confusion_pairs"],
+        ),
+        artifact_status="ready",
+    )
 
 
 def predict_image_bytes(image_bytes: bytes) -> PredictionResponse:
@@ -379,39 +625,7 @@ def predict_image_bytes(image_bytes: bytes) -> PredictionResponse:
 
     try:
         runtime = load_runtime()
-        torch = runtime["torch"]
-        functional = runtime["functional"]
         image = runtime["image_class"].open(BytesIO(image_bytes)).convert("RGB")
-        image_tensor = runtime["transform"](image).unsqueeze(0).to(runtime["device"])
-
-        with torch.no_grad():
-            logits = runtime["model"](image_tensor).cpu()
-            probabilities = functional.softmax(logits / runtime["temperature"], dim=1)
-            top_probabilities, top_indices = probabilities.topk(5, dim=1)
-
-        predictions = [
-            Prediction(
-                rank=rank + 1,
-                class_name=runtime["class_names"][class_index],
-                confidence=confidence,
-            )
-            for rank, (class_index, confidence) in enumerate(
-                zip(top_indices[0].tolist(), top_probabilities[0].tolist())
-            )
-        ]
-        return PredictionResponse(
-            model_name=MODEL_NAME,
-            mode="image",
-            temperature=runtime["temperature"],
-            top_predictions=predictions,
-            decision=build_decision(
-                "image",
-                predictions,
-                policy=runtime["policy"],
-                hard_classes=runtime["hard_classes"],
-                confusion_pairs=runtime["confusion_pairs"],
-            ),
-            artifact_status="ready",
-        )
+        return build_prediction_response(image, runtime)
     except Exception:
         return predict_mock(mode="image")

@@ -11,6 +11,13 @@ Install runtime dependencies in your preferred environment:
 pip install fastapi uvicorn python-multipart
 ```
 
+Install the optional detector dependency when testing live multi-food image
+analysis:
+
+```bash
+pip install ultralytics
+```
+
 Start the API:
 
 ```bash
@@ -34,8 +41,9 @@ POST /predict/video
 The single-image and video endpoints use real artifacts when available and
 fallback predictions when they are not. The multi-food endpoint returns the
 Notebook 8 app contract with detected regions, crop-level predictions, decision
-bands, and artifact references. It is currently deterministic while live
-detector inference is being productized.
+bands, and artifact references. It uses live YOLO proposals plus crop
+classification when `ultralytics` is installed, and falls back to a deterministic
+prototype response when the detector runtime is unavailable.
 
 ## Real Inference Integration
 
@@ -51,5 +59,5 @@ Required artifacts:
 - hard-class list
 - confusion-pair list
 
-The multi-food path will also need detector weights or a packaged detector
-runtime, plus the same crop-classifier artifacts listed above.
+The multi-food path also uses detector weights through the `ultralytics` runtime.
+Set `FOODLENS_DETECTOR_WEIGHTS` to override the default `yolo11n.pt` detector.
